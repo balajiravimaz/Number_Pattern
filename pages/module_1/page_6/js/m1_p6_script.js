@@ -53,7 +53,8 @@ function _pageLoaded() {
         // _forceNavigation = true;
 
     }
-    appState.pageCount = _controller.pageCnt ;
+    appState.pageCount = 0;
+    $("#f_header, #f_courseTitle").css("background", "transparent");
     $(".home_btn").css({backgroundImage: `url(${_pageData.sections[0].backBtnSrc})`});
     $(".home_btn").attr("data-tooltip", "Back");
     addSectionData();
@@ -331,7 +332,7 @@ function onClickHandler(evt) {
 
     var body = $('#section-' + sectionCnt).find('.content-holder').find('.col-mid').find('.content').find('.content-bg').find('.body')
     //var sectionArray = _pageData.sections[sectionCnt - 1].content.sectionArray;
-    var jumpToPage = [1, 3, 3, 4];
+    var jumpToPage = [1, 5, 3, 4];
     console.log("Jump to page", jumpToPage[num])
     //var jumpToPage = sectionArray.sectionID
 

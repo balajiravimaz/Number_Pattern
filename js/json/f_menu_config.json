@@ -32,6 +32,22 @@
                 "inMenuShow": "true"
               },
               {
+                "heading": "3",
+                "URL": "pages/module_1/page_3/page.html",
+                "hasAudio": "true",
+                "hasVideo": "false",
+                "page": [],
+                "inMenuShow": "true"
+              },
+              {
+                "heading": "4",
+                "URL": "pages/module_1/page_5/page.html",
+                "hasAudio": "true",
+                "hasVideo": "false",
+                "page": [],
+                "inMenuShow": "true"
+              },
+              {
                 "heading": "2",
                 "URL": "pages/module_1/page_6/page.html",
                 "hasAudio": "true",
@@ -46,7 +62,7 @@
                 "hasVideo": "false",
                 "page": [],
                 "inMenuShow": "true"
-              }              
+              }
             ]
           }
         ]

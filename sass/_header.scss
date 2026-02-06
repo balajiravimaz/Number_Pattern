@@ -13,6 +13,7 @@
 
     @include tablet-landscape-height {
       width: 100px;
+
       img {
         width: 100px;
       }
@@ -86,24 +87,28 @@
     &.fullScreen {
       background: url("../assets/images/nav-fullscreen-on.png") no-repeat;
       background-size: contain;
+
       // @include ipad-landscape{
       //   background-position: center;
       // }
       @include tablet-landscape-height {
         // background-position: center;
       }
+
       // background-position: center;
     }
 
     &.offScreen {
       background: url("../assets/images/nav-fullscreen-off.png") no-repeat;
       background-size: contain;
+
       // @include ipad-landscape{
       //   background-position: center;
       // }
       @include tablet-landscape-height {
         // background-position: center;
       }
+
       // background-position: center;
     }
 
@@ -155,9 +160,9 @@
     /* background-color: #ffe600; */
     /* padding: 20px; */
     text-align: center;
-    background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;    
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
 
     p {
       position: relative;
@@ -171,13 +176,14 @@
       font-family: "EYInterstateRegular";
     }
   }
+
   .nav_btns {
     position: relative;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     gap: 10px;
-    padding: 15px 20px; 
+    padding: 15px 20px;
 
     .music {
       position: relative;
@@ -188,7 +194,7 @@
       cursor: pointer;
 
       &.playing {
-        background:url(../assets/images/nav/music.png);
+        background: url(../assets/images/nav/music.png);
         background-size: contain;
       }
 
@@ -218,6 +224,7 @@
       background-repeat: no-repeat;
       cursor: pointer;
     }
+
     button {
       // background: transparent;  
       border: none;
@@ -263,6 +270,7 @@
         opacity: 1;
       }
     }
+
     .information-icon:hover,
     .music:hover,
     .header-container-play:hover,

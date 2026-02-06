@@ -21,6 +21,11 @@ _checkAudioFlag = false;
 _tweenTimeline = null;
 _popTweenTimeline = null;
 var lastPatternId = null;
+var patterns = null;
+var allPatterns = null;
+
+var currentPatternIndex = 0;
+var totalPatterns = 0;
 
 var _audioIndex = 0;
 _videoId = null;
@@ -51,11 +56,12 @@ function _pageLoaded() {
   if (_videoRequired) _videoId = "courseVideo";
 
   //addSlideData();
-  console.log(_pageData.sections,_pageData.sections[0].backBtnSrc, "pageDAtat")
+  // console.log(_pageData.sections, _pageData.sections[0].backBtnSrc, "pageDAtat")
   addSectionData();
-  $("#f_header").css({backgroundImage: `url(${_pageData.sections[0].headerImg})`});
-  $("#f_header").find("#f_courseTitle").css({backgroundImage: `url(${_pageData.sections[0].headerText})`});
-  $(".home_btn").css({backgroundImage: `url(${_pageData.sections[0].backBtnSrc})`});
+  appState.pageCount = _controller.pageCnt -1;
+  $("#f_header").css({ backgroundImage: `url(${_pageData.sections[0].headerImg})` });
+  $("#f_header").find("#f_courseTitle").css({ backgroundImage: `url(${_pageData.sections[0].headerText})` });
+  $(".home_btn").css({ backgroundImage: `url(${_pageData.sections[0].backBtnSrc})` });
   // playBtnSounds(_pageData.sections[sectionCnt - 1].endAudio);
   //   showEndAnimations();
   checkGlobalAudio();
@@ -113,6 +119,7 @@ function addSectionData() {
 
       const numberObjects =
         _pageData.sections[sectionCnt - 1].content.numberObjects;
+      patterns = _pageData.sections[sectionCnt - 1].content.numberObjects;
 
       // pick ONE random pattern
       const pattern = getRandomPattern(numberObjects);
@@ -178,29 +185,29 @@ function addSectionData() {
         );
 
 
-      enableDragAndDrop({
-        cupsSelector: ".cups .cup",
-        slotsSelector: ".shelf .slot",
+      // enableDragAndDrop({
+      //   cupsSelector: ".cups .cup",
+      //   slotsSelector: ".shelf .slot",
 
-        onCorrectDrop: (cup, slot) => {
-          cup.classList.remove("success");
-          void cup.offsetWidth;
-          cup.classList.add("success");
-          playFeedbackAudio(_pageData.sections[sectionCnt - 1].correctAudio);
-        },
+      //   onCorrectDrop: (cup, slot) => {
+      //     cup.classList.remove("success");
+      //     void cup.offsetWidth;
+      //     cup.classList.add("success");
+      //     playFeedbackAudio(_pageData.sections[sectionCnt - 1].correctAudio);
+      //   },
 
-        onWrongDrop: (cup) => {
-          playFeedbackAudio(_pageData.sections[sectionCnt - 1].wrongAudio);
-        },
+      //   onWrongDrop: (cup) => {
+      //     playFeedbackAudio(_pageData.sections[sectionCnt - 1].wrongAudio);
+      //   },
 
-        onGameCompleted: () => {
-          console.log("Game Completed");
-          setTimeout(function(){
-            playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
-            showEndAnimations();
-          },1000)
-        }
-      });
+      //   onGameCompleted: () => {
+      //     console.log("Game Completed");
+      //     setTimeout(function () {
+      //       playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
+      //       showEndAnimations();
+      //     }, 1000)
+      //   }
+      // });
 
 
 
@@ -209,14 +216,28 @@ function addSectionData() {
 
 
       // $("#refresh").on("click", restartActivity);
-      // $("#home,#homeBack").on("click", jumtoPage)  
+      // $("#home,#homeBack").on("click", jumtoPage)        
+
+      totalPatterns = _pageData.sections[sectionCnt - 1].content.numberObjects.length;
+      allPatterns = _pageData.sections[sectionCnt - 1].content.numberObjects;
+
+
+      const gameArea = document.querySelector(".game-area");
+      gameArea.classList.add("is-fading");
+
+      loadPattern(0);
+
+      requestAnimationFrame(() => {
+        gameArea.classList.remove("is-fading");
+      });
 
       $("#refresh").on("click", function () {
         jumtoPage(_controller.pageCnt);
       });
       $("#homeBack").on("click", function () {
-        jumtoPage(_controller.pageCnt-1)
+        jumtoPage(_controller.pageCnt - 1)
       });
+
       // $("#home").on("click", function () {
       //   playClickThen();
       //   $("#home-popup").css('display', 'flex');
@@ -228,7 +249,9 @@ function addSectionData() {
       //     toggleAudio(el);
       // });
       // _currentAudio = _pageData.sections[sectionCnt - 1].content.flipObjects[0].instAudio;
+
       $(".flipTextAudio").on("click", replayLastAudio);
+
       // document.querySelector("#info").addEventListener("click", function (event) {
       //   playClickThen();
       //   AudioController.pause();
@@ -278,6 +301,65 @@ function getRandomPattern(patterns) {
   saveLastPatternId(selected.patternId);
 
   return selected;
+}
+
+
+
+
+function loadPattern(index) {
+  const pattern = allPatterns[index];
+  if (!pattern) return;
+
+  const cupsEl = document.querySelector(".cups");
+  const shelfEl = document.querySelector(".shelf");
+
+  cupsEl.innerHTML = getCupHTML(pattern);
+  shelfEl.innerHTML = getShelfHTML(pattern);
+
+  // ⬅️ MUST be after DOM update
+  enableDragAndDrop({
+    cupsSelector: ".cups .cup",
+    slotsSelector: ".shelf .slot",
+
+    onCorrectDrop: (cup, slot) => {
+      cup.classList.remove("success");
+      void cup.offsetWidth;
+      cup.classList.add("success");
+      playFeedbackAudio(_pageData.sections[sectionCnt - 1].correctAudio);
+    },
+
+    onWrongDrop: (cup) => {
+      playFeedbackAudio(_pageData.sections[sectionCnt - 1].wrongAudio);
+    },
+
+    onGameCompleted: () => {
+      handlePatternCompleted();
+    }
+  });
+}
+
+
+function handlePatternCompleted() {
+  const gameArea = document.querySelector(".game-area");
+
+  gameArea.classList.add("is-fading");
+
+  setTimeout(() => {
+    currentPatternIndex++;
+
+    if (currentPatternIndex < allPatterns.length) {
+      loadPattern(currentPatternIndex);
+
+      requestAnimationFrame(() => {
+        gameArea.classList.remove("is-fading");
+      });
+    } else {
+      setTimeout(function () {
+        showEndAnimations();
+        playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
+      }, 500)
+    }
+  }, 600);
 }
 
 
@@ -365,13 +447,134 @@ function resetCupPosition(cup) {
   cup.style.top = `${cup.dataset.startY}px`;
 }
 
-function enableDragAndDrop({
-  cupsSelector,
-  slotsSelector,
-  onCorrectDrop,
-  onWrongDrop,
-  onGameCompleted
-}) {
+// function enableDragAndDrop({
+//   cupsSelector,
+//   slotsSelector,
+//   onCorrectDrop,
+//   onWrongDrop,
+//   onGameCompleted
+// }) {
+//   const cups = document.querySelectorAll(cupsSelector);
+//   const slots = document.querySelectorAll(slotsSelector);
+
+//   let activeCup = null;
+//   let dragImg = null;
+//   let offsetX = 0;
+//   let offsetY = 0;
+
+//   cups.forEach(cup => {
+//     cup.addEventListener("pointerdown", startDrag);
+//   });
+
+//   function startDrag(e) {
+//     if (activeCup) return;
+//     e.preventDefault();
+//     playClickThen();
+
+//     activeCup = e.currentTarget;
+//     const img = activeCup.querySelector("img");
+
+//     // clone image
+//     dragImg = img.cloneNode(true);
+//     dragImg.style.position = "fixed";
+//     dragImg.style.width = img.offsetWidth + "px";
+//     dragImg.style.height = img.offsetHeight + "px";
+//     dragImg.style.pointerEvents = "none";
+//     dragImg.style.zIndex = "9999";
+
+//     document.body.appendChild(dragImg);
+
+//     const rect = img.getBoundingClientRect();
+//     offsetX = e.clientX - rect.left;
+//     offsetY = e.clientY - rect.top;
+
+//     moveAt(e.clientX, e.clientY);
+
+//     document.addEventListener("pointermove", onMove);
+//     document.addEventListener("pointerup", endDrag);
+//   }
+
+//   function moveAt(x, y) {
+//     dragImg.style.left = x - offsetX + "px";
+//     dragImg.style.top = y - offsetY + "px";
+//   }
+
+//   function onMove(e) {
+//     moveAt(e.clientX, e.clientY);
+//   }
+
+//   function endDrag(e) {
+//     document.removeEventListener("pointermove", onMove);
+//     document.removeEventListener("pointerup", endDrag);
+
+//     let dropped = false;
+
+//     slots.forEach(slot => {
+//       const rect = slot.getBoundingClientRect();
+
+//       if (
+//         e.clientX > rect.left &&
+//         e.clientX < rect.right &&
+//         e.clientY > rect.top &&
+//         e.clientY < rect.bottom
+//       ) {
+//         dropped = true;
+//         handleDrop(slot);
+//       }
+//     });
+
+//     const cupRef = activeCup;
+
+//     dragImg.remove();
+//     dragImg = null;
+//     activeCup = null;
+
+//     // if (!dropped && cupRef) {
+//     //   onWrongDrop?.(cupRef);
+//     // }
+//   }
+
+//   function handleDrop(slot) {
+//     if (!activeCup || slot.children.length > 0) {
+//       onWrongDrop?.(activeCup);
+//       return;
+//     }
+
+//     const cupValue = activeCup.dataset.value;
+//     const slotValue = slot.dataset.value;
+
+//     if (cupValue === slotValue) {
+//       slot.appendChild(activeCup);
+
+//       // 🔒 FULLY DISABLE FUTURE DRAG
+//       activeCup.style.pointerEvents = "none";
+//       activeCup.style.touchAction = "none";
+//       activeCup.removeEventListener("pointerdown", startDrag);
+
+//       onCorrectDrop?.(activeCup, slot);
+
+//       if (isGameCompleted(slots)) {
+//         onGameCompleted?.();
+//       }
+//     }
+
+//     else {
+//       onWrongDrop?.(activeCup);
+//     }
+//   }
+// }
+
+
+// function isGameCompleted(slots) {
+//   return [...slots].every(slot =>
+//     slot.children.length === 1 &&
+//     slot.children[0].dataset.value === slot.dataset.value
+//   );
+// }
+
+
+
+function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrongDrop, onGameCompleted }) {
   const cups = document.querySelectorAll(cupsSelector);
   const slots = document.querySelectorAll(slotsSelector);
 
@@ -380,7 +583,13 @@ function enableDragAndDrop({
   let offsetX = 0;
   let offsetY = 0;
 
+  // Store original positions for all cups
   cups.forEach(cup => {
+    cup._originalParent = cup.parentElement;
+    const rect = cup.getBoundingClientRect();
+    cup.dataset.startX = rect.left + window.scrollX;
+    cup.dataset.startY = rect.top + window.scrollY;
+
     cup.addEventListener("pointerdown", startDrag);
   });
 
@@ -392,7 +601,7 @@ function enableDragAndDrop({
     activeCup = e.currentTarget;
     const img = activeCup.querySelector("img");
 
-    // clone image
+    // clone image for dragging
     dragImg = img.cloneNode(true);
     dragImg.style.position = "fixed";
     dragImg.style.width = img.offsetWidth + "px";
@@ -425,69 +634,144 @@ function enableDragAndDrop({
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", endDrag);
 
-    let dropped = false;
+    let droppedOnSlot = false;
 
     slots.forEach(slot => {
       const rect = slot.getBoundingClientRect();
 
-      if (
-        e.clientX > rect.left &&
-        e.clientX < rect.right &&
-        e.clientY > rect.top &&
-        e.clientY < rect.bottom
-      ) {
-        dropped = true;
+      if (e.clientX > rect.left && e.clientX < rect.right && e.clientY > rect.top && e.clientY < rect.bottom) {
+        droppedOnSlot = true;
         handleDrop(slot);
       }
     });
 
-    const cupRef = activeCup;
+    // Remove drag image
+    if (dragImg) {
+      dragImg.remove();
+      dragImg = null;
+    }
 
-    dragImg.remove();
-    dragImg = null;
     activeCup = null;
-
-    // if (!dropped && cupRef) {
-    //   onWrongDrop?.(cupRef);
-    // }
   }
 
+
   function handleDrop(slot) {
-    if (!activeCup || slot.children.length > 0) {
-      onWrongDrop?.(activeCup);
+    if (!activeCup) return;
+
+    // 🚫 STOP if slot already has a cup
+    if (slot.children.length > 0) {
       return;
     }
 
     const cupValue = activeCup.dataset.value;
     const slotValue = slot.dataset.value;
 
+    // Append cup to slot visually first
+    slot.appendChild(activeCup);
+
+    // Disable dragging while cup is in slot
+    activeCup.style.pointerEvents = "none";
+    activeCup.style.touchAction = "none";
+    activeCup.removeEventListener("pointerdown", startDrag);
+
     if (cupValue === slotValue) {
-      slot.appendChild(activeCup);
-
-      // 🔒 FULLY DISABLE FUTURE DRAG
-      activeCup.style.pointerEvents = "none";
-      activeCup.style.touchAction = "none";
-      activeCup.removeEventListener("pointerdown", startDrag);
-
+      // ✅ Correct drop
       onCorrectDrop?.(activeCup, slot);
 
       if (isGameCompleted(slots)) {
         onGameCompleted?.();
       }
-    }
-
-    else {
+    } else {
+      // ❌ Wrong drop
       onWrongDrop?.(activeCup);
+
+      const cupRef = activeCup;
+
+      shakeCup(cupRef, () => {
+        setTimeout(() => {
+          animateBack(cupRef);
+        }, 500);
+      });
     }
+  }
+
+
+
+  function shakeCup(cup, onComplete) {
+    if (!cup) return;
+
+    cup.style.transition = "transform 0.08s ease";
+
+    cup.style.transform = "translateX(-5px)";
+
+    setTimeout(() => {
+      cup.style.transform = "translateX(5px)";
+    }, 80);
+
+    setTimeout(() => {
+      cup.style.transform = "translateX(0)";
+    }, 160);
+
+    setTimeout(() => {
+      cup.style.transition = "";
+      onComplete && onComplete();
+    }, 200);
+  }
+
+
+
+
+  function animateBack(cup) {
+    if (!cup || !cup._originalParent) return;
+
+    const originalParent = cup._originalParent;
+    const DURATION = 1800; // must match transition duration
+
+    // FIRST
+    const firstRect = cup.getBoundingClientRect();
+
+    // DOM jump back to original container
+    originalParent.appendChild(cup);
+
+    // LAST
+    const lastRect = cup.getBoundingClientRect();
+
+    // INVERT
+    const deltaX = firstRect.left - lastRect.left;
+    const deltaY = firstRect.top - lastRect.top;
+
+    cup.style.pointerEvents = "none";
+    cup.style.transition = "none";
+    cup.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+    // FORCE browser to apply initial transform
+    cup.getBoundingClientRect();
+
+    // PLAY (guaranteed smooth)
+    requestAnimationFrame(() => {
+      cup.style.transition = `transform ${DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+      cup.style.transform = "translate(0, 0)";
+    });
+
+    // CLEANUP exactly after animation
+    setTimeout(() => {
+      cup.style.transition = "";
+      cup.style.transform = "";
+      cup.style.pointerEvents = "";
+      cup.addEventListener("pointerdown", startDrag);
+    }, DURATION);
+  }
+
+
+
+
+  function isGameCompleted(slots) {
+    return [...slots].every(
+      slot => slot.children.length === 1 && slot.children[0].dataset.value === slot.dataset.value
+    );
   }
 }
 
-function isGameCompleted(slots) {
-  return [...slots].every(slot =>
-    slot.children.length === 1 &&
-    slot.children[0].dataset.value === slot.dataset.value
-  );
-}
 
 
 
@@ -505,7 +789,7 @@ function leavePage() {
     audio.currentTime = 0;
   }
 
-  jumtoPage(_controller.pageCnt-1);
+  jumtoPage(_controller.pageCnt - 1);
 }
 
 function jumtoPage(pageNo) {

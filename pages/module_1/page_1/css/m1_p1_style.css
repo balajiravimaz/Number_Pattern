@@ -194,7 +194,6 @@ $bg-position: -120px -120px, 0 0, 20px 50px, 25px 55px, 50px 125px;*/
 #section-1 .content-holder .col-left .content .content-bg > .body > .image-container .btn_holder .box#box-2 {
   background-image: url(../images/sim.png);
   background-repeat: no-repeat;
-  pointer-events: none !important;
 }
 #section-1 .content-holder .col-left .content .content-bg > .body > .image-container .btn_holder .box#box-3 {
   background-image: url(../images/game.png);

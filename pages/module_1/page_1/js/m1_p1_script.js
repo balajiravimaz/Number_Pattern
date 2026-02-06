@@ -53,7 +53,7 @@ function _pageLoaded() {
         // _forceNavigation = true;
 
     }
-    appState.pageCount = _controller.pageCnt ;
+    appState.pageCount = _controller.pageCnt - 1;
     addSectionData();
     //assignAudio(_audioId, _audioIndex, _pageAudioSync, _forceNavigation, _videoId, _popupAudio, _reloadRequired);
     pagePreLoad();
@@ -326,10 +326,12 @@ function onClickHandler(evt) {
     var id = $(this).attr('id');
     var arr = id.split('-')
     var num = Number(arr[arr.length - 1]) - 1;
+    console.log("its clicked", _controller.pageCnt,num)
+    // exit();
 
     var body = $('#section-' + sectionCnt).find('.content-holder').find('.col-mid').find('.content').find('.content-bg').find('.body')
     //var sectionArray = _pageData.sections[sectionCnt - 1].content.sectionArray;
-    var jumpToPage = [1, 2, 2, 4];
+    var jumpToPage = [1, 2, 4, 4];
     console.log("Jump to page", jumpToPage[num])
     //var jumpToPage = sectionArray.sectionID
 

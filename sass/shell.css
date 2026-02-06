@@ -1998,9 +1998,9 @@ footer p {
   /* background-color: #ffe600; */
   /* padding: 20px; */
   text-align: center;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
 }
 #f_header #f_courseTitle p {
   position: relative;

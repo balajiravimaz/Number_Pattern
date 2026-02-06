@@ -5,76 +5,21 @@
     "audioIndex": 0
   },
   "bgImgs": [
+   
     {
-      "imageSRC": "pages/module_1/page_7/images/18.png",
+      "imageSRC": "pages/module_1/page_7/images/down.png",
       "altText": ""
     },
     {
-      "imageSRC": "pages/module_1/page_7/images/20.png",
+      "imageSRC": "pages/module_1/page_7/images/top.png",
       "altText": ""
     },
     {
-      "imageSRC": "pages/module_1/page_7/images/19.png",
+      "imageSRC": "pages/module_1/page_7/images/left.png",
       "altText": ""
     },
     {
-      "imageSRC": "pages/module_1/page_7/images/4.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/5.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/6.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/7.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/8.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/9.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/11.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/12.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/13.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/15.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/16.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/17.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/18.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/19.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/20.png",
+      "imageSRC": "pages/module_1/page_7/images/right.png",
       "altText": ""
     },
     {
@@ -113,10 +58,7 @@
       "imageSRC": "pages/module_1/page_7/images/bg_pause.png",
       "altText": ""
     },
-    {
-      "imageSRC": "pages/module_1/page_7/images/correct.png",
-      "altText": ""
-    },
+    
     {
       "imageSRC": "pages/module_1/page_7/images/header_bg.png",
       "altText": ""
@@ -152,15 +94,8 @@
     {
       "imageSRC": "pages/module_1/page_7/images/replay.png",
       "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/right_bg.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/wrong.png",
-      "altText": ""
     }
+        
   ],
   "imgCollage": {
     "desktop": [
@@ -182,8 +117,9 @@
       "headerTitle": "Heavy - Light",
       "headerImg": "pages/module_1/page_7/images/header_bg.png",
       "headerText": "pages/module_1/page_7/images/header_title.png",
+            
       "ost": "",
-      "iText": "Look at the numbers. <span>Drag</span> the cups in and put them in order. <span class='audio'></span>",
+      "iText": "Hello! Let's help the caterpillar follow the number pattern!",
       "endAudio": "",
       "infoImg": "pages/module_1/page_7/images/fun_game.png",      
       "backBtnSrc":"assets/images/back.png",
@@ -239,72 +175,6 @@
               {
                 "value": 9,
                 "img": "pages/module_1/page_7/images/9.png"
-              }
-            ]
-          },
-          {
-            "patternId": 3,
-            "sequence": [
-              11,
-              12,
-              13
-            ],
-            "items": [
-              {
-                "value": 11,
-                "img": "pages/module_1/page_7/images/11.png"
-              },
-              {
-                "value": 12,
-                "img": "pages/module_1/page_7/images/12.png"
-              },
-              {
-                "value": 13,
-                "img": "pages/module_1/page_7/images/13.png"
-              }
-            ]
-          },
-          {
-            "patternId": 4,
-            "sequence": [
-              18,
-              19,
-              20
-            ],
-            "items": [
-              {
-                "value": 18,
-                "img": "pages/module_1/page_7/images/18.png"
-              },
-              {
-                "value": 19,
-                "img": "pages/module_1/page_7/images/19.png"
-              },
-              {
-                "value": 20,
-                "img": "pages/module_1/page_7/images/20.png"
-              }
-            ]
-          },
-          {
-            "patternId": 5,
-            "sequence": [
-              15,
-              16,
-              17
-            ],
-            "items": [
-              {
-                "value": 15,
-                "img": "pages/module_1/page_7/images/15.png"
-              },
-              {
-                "value": 16,
-                "img": "pages/module_1/page_7/images/16.png"
-              },
-              {
-                "value": 17,
-                "img": "pages/module_1/page_7/images/17.png"
               }
             ]
           }

@@ -59,18 +59,21 @@
 					position: relative;
 					display: flex;
 					height: 100%;
-					& > .main-text {
+
+					&>.main-text {
 						display: flex !important;
 						align-items: center;
 						justify-content: center;
 						width: calc(100% - 400px);
-						& > h1 {
+
+						&>h1 {
 							position: relative;
 							font-weight: bold;
 							margin-bottom: 1% !important;
 							font-size: 3.5rem;
 							text-align: center;
 							color: #195855 !important;
+
 							span {
 								font-size: 3rem;
 								color: #feb242;
@@ -83,10 +86,11 @@
 						//font-style: italic;
 						display: none !important;
 					}
+
 					.ost-txt {
 						opacity: 0;
 
-						& > p {
+						&>p {
 							// opacity: 0;
 							color: $white;
 
@@ -95,13 +99,14 @@
 						}
 					}
 
-					& > .body {
+					&>.body {
 						position: relative;
 						display: flex;
 						flex-direction: column;
 						justify-content: center;
 						align-items: center;
 						width: 100%;
+
 						.dummypatch {
 							position: absolute;
 							width: 100%;
@@ -112,12 +117,12 @@
 							opacity: 0;
 						}
 
-						& > .text-container {
+						&>.text-container {
 							opacity: 0;
 							//padding: 20px;
 							//background: linear-gradient(125deg, rgb(85, 85, 86, 0.3) 48%, rgb(47, 47, 48, 0.3) 100%);
 
-							& > p {
+							&>p {
 								// opacity: 0;
 								color: $white;
 
@@ -137,11 +142,11 @@
 								}
 							}
 
-							& > ul {
+							&>ul {
 								margin-left: 40px;
 								list-style-type: none;
 
-								& > li {
+								&>li {
 									position: relative;
 									font-size: $page-font-size;
 									line-height: 19px;
@@ -162,7 +167,7 @@
 							}
 						}
 
-						& > .image-container {
+						&>.image-container {
 							display: flex;
 							position: relative;
 							flex-direction: column;
@@ -171,6 +176,7 @@
 							justify-content: flex-start;
 							height: 100%;
 							margin-right: 25px;
+
 							.btn_holder {
 								width: 50%;
 								height: 120px;
@@ -178,6 +184,7 @@
 								flex-direction: row;
 								align-items: start;
 								justify-content: end;
+
 								.box {
 									width: 100%;
 									height: 100%;
@@ -186,24 +193,28 @@
 									background-position: center;
 									cursor: pointer;
 									background-color: transparent;
+
 									&:hover {
 										animation: slowInFastOut 0.5s ease-in-out;
 									}
+
 									&#box-1 {
 										background-image: url(../images/story.png);
 										background-repeat: no-repeat;
 										pointer-events: none !important;
 									}
+
 									&#box-2 {
 										background-image: url(../images/sim.png);
 										background-repeat: no-repeat;
-										pointer-events: none !important;
 									}
+
 									&#box-3 {
 										background-image: url(../images/game.png);
 										background-repeat: no-repeat;
 									}
 								}
+
 								.btn_info {
 									position: absolute;
 									width: 50px;
@@ -216,6 +227,7 @@
 									background-repeat: no-repeat;
 									cursor: pointer;
 								}
+
 								.i-txt-toolTip {
 									position: absolute;
 									background-color: transparent;
@@ -264,6 +276,7 @@
 			}
 		}
 	}
+
 	.infobtnPopup {
 		display: none;
 		opacity: 0;

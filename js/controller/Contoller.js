@@ -406,7 +406,7 @@ Controller.prototype.checkPreLoaderHide = function () {
 
     }
 };
- 
+
 function initintroPageAnimations() {
     if (_tweenTimeline) {
         _tweenTimeline.kill();
@@ -2624,11 +2624,11 @@ function goHome(pageCount) {
     playClickThen();
     console.log(pageCount, "coutners;")
     // exit;
-    _controller.pageCnt = pageCount;    
+    _controller.pageCnt = pageCount;
     sessionStorage.setItem("stopAudio", "true");
-    if(pageCount == 0){
+    if (pageCount === -1) {
         location.reload();
-    }else{
+    } else {
         _controller.updateViewNow();
     }
 }
