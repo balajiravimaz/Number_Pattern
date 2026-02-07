@@ -2622,10 +2622,18 @@ document.addEventListener("fullscreenchange", () => {
 
 function goHome(pageCount) {
     playClickThen();
-    console.log(pageCount, "coutners;")
-    // exit;
+    console.log(pageCount, "coutners;");
+
+    // 🔇 stop simulation audio
+    const audio = document.getElementById("simulationAudio");
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+    }
+
     _controller.pageCnt = pageCount;
     sessionStorage.setItem("stopAudio", "true");
+
     if (pageCount === -1) {
         location.reload();
     } else {

@@ -56,6 +56,14 @@
                 "inMenuShow": "true"
               },
               {
+                "heading": "2",
+                "URL": "pages/module_1/page_7/page.html",
+                "hasAudio": "true",
+                "hasVideo": "true",
+                "page": [],
+                "inMenuShow": "true"
+              },
+              {
                 "heading": "8",
                 "URL": "pages/module_1/page_8/page.html",
                 "hasAudio": "true",

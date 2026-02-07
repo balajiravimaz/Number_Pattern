@@ -358,7 +358,7 @@ function initSnakeGame() {
 
     // add image inside button
     const img = document.createElement("img");
-    img.src = `pages/module_1/page_7/images/${dir}.png`; // directly use dir for image filename
+    img.src = `pages/module_1/page_5/images/${dir}.png`; // directly use dir for image filename
     // img.style.width = "100%";
     img.style.height = "auto";
     btn.appendChild(img);
@@ -540,9 +540,9 @@ function initSnakeGame() {
 
 
   const headImg = new Image();
-  headImg.src = "pages/module_1/page_7/images/head.png";
+  headImg.src = "pages/module_1/page_5/images/head.png";
   const bodyImg = new Image();
-  bodyImg.src = "pages/module_1/page_7/images/body.png";
+  bodyImg.src = "pages/module_1/page_5/images/body.png";
 
   function drawSnake() {
     // 1. Base Sizes

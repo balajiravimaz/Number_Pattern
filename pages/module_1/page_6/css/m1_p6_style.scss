@@ -59,18 +59,21 @@
 					position: relative;
 					display: flex;
 					height: 100%;
-					& > .main-text {
+
+					&>.main-text {
 						display: flex !important;
 						align-items: center;
 						justify-content: center;
 						width: calc(100% - 400px);
-						& > h1 {
+
+						&>h1 {
 							position: relative;
 							font-weight: bold;
 							margin-bottom: 1% !important;
 							font-size: 3.5rem;
 							text-align: center;
 							color: #195855 !important;
+
 							span {
 								font-size: 3rem;
 								color: #feb242;
@@ -83,10 +86,11 @@
 						//font-style: italic;
 						display: none !important;
 					}
+
 					.ost-txt {
 						opacity: 0;
 
-						& > p {
+						&>p {
 							// opacity: 0;
 							color: $white;
 
@@ -95,13 +99,14 @@
 						}
 					}
 
-					& > .body {
+					&>.body {
 						position: relative;
 						display: flex;
 						flex-direction: column;
 						justify-content: center;
 						align-items: center;
 						width: 100%;
+
 						.dummypatch {
 							position: absolute;
 							width: 100%;
@@ -112,12 +117,12 @@
 							opacity: 0;
 						}
 
-						& > .text-container {
+						&>.text-container {
 							opacity: 0;
 							//padding: 20px;
 							//background: linear-gradient(125deg, rgb(85, 85, 86, 0.3) 48%, rgb(47, 47, 48, 0.3) 100%);
 
-							& > p {
+							&>p {
 								// opacity: 0;
 								color: $white;
 
@@ -137,11 +142,11 @@
 								}
 							}
 
-							& > ul {
+							&>ul {
 								margin-left: 40px;
 								list-style-type: none;
 
-								& > li {
+								&>li {
 									position: relative;
 									font-size: $page-font-size;
 									line-height: 19px;
@@ -162,7 +167,7 @@
 							}
 						}
 
-						& > .image-container {
+						&>.image-container {
 							display: flex;
 							position: relative;
 							flex-direction: column;
@@ -171,6 +176,7 @@
 							justify-content: flex-start;
 							height: 100%;
 							margin-right: 25px;
+
 							.btn_holder {
 								width: 50%;
 								height: 120px;
@@ -178,6 +184,7 @@
 								flex-direction: row;
 								align-items: start;
 								justify-content: end;
+
 								.box {
 									width: 100%;
 									height: 100%;
@@ -186,23 +193,28 @@
 									background-position: center;
 									cursor: pointer;
 									background-color: transparent;
+
 									&:hover {
 										animation: slowInFastOut 0.5s ease-in-out;
 									}
+
 									&#box-1 {
 										background-image: url(../images/fun_game.png);
 										background-repeat: no-repeat;
-										pointer-events: none !important;
+										// pointer-events: none !important;
 									}
+
 									&#box-2 {
 										background-image: url(../images/number_pattern.png);
 										background-repeat: no-repeat;
 									}
+
 									&#box-3 {
 										background-image: url(../images/game.png);
 										background-repeat: no-repeat;
 									}
 								}
+
 								.btn_info {
 									position: absolute;
 									width: 50px;
@@ -215,6 +227,7 @@
 									background-repeat: no-repeat;
 									cursor: pointer;
 								}
+
 								.i-txt-toolTip {
 									position: absolute;
 									background-color: transparent;
@@ -262,7 +275,145 @@
 				}
 			}
 		}
+
+		#introPopup-3 {
+			display: none;
+			opacity: 0;
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.2);
+			backdrop-filter: blur(4px);
+			-webkit-backdrop-filter: blur(4px);
+			justify-content: center;
+			align-items: center;
+			transition: opacity 0.3s ease;
+			z-index: 99999;
+
+			.popup-content {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				max-width: 85%;
+				max-height: 450px;
+				transform: translate(-50%, -50%);
+				animation: fadeInPopup 0.3s ease;
+				z-index: 10002;
+				pointer-events: auto;
+				padding: 1%;
+				background: transparent;
+
+				.introPopclose {
+					position: absolute;
+					top: 30px;
+					right: 125px;
+					background: url("../images/close.png") no-repeat;
+					background-size: contain;
+					width: 20px;
+					height: 20px;
+					cursor: pointer;
+					transition: transform 0.5s ease-in-out;
+
+					@include mobile-landscape {
+						top: 15px;
+						right: 60px;
+						width: 15px;
+						height: 15px;
+					}
+
+					&:hover {
+						transform: scale(1.125);
+					}
+
+					&::after {
+						content: attr(data-tooltip);
+						/* tooltip text from attribute */
+						position: absolute;
+						top: 100%;
+						/* below the button */
+						left: 50%;
+						transform: translateX(-50%);
+						background: rgba(0, 0, 0, 0.85);
+						font-weight: bold;
+						white-space: nowrap;
+						box-shadow: 0 2px 19px rgba(0, 0, 0, 0.6);
+						border: 1px solid rgba(255, 255, 255, 0.3);
+						color: #fff;
+						font-size: 10px;
+						padding: 3px 5px;
+						border-radius: 4px;
+						white-space: nowrap;
+						opacity: 0;
+						font-family: "Times New Roman", Times, serif;
+						pointer-events: none;
+						transition: opacity 0.2s;
+						margin-top: 4px;
+						z-index: 10;
+					}
+
+					/* Show tooltip on hover */
+					&:hover::after {
+						opacity: 1;
+					}
+				}
+
+				.introPopAudio {
+					position: absolute;
+					width: 40px;
+					height: 40px;
+					top: 50px;
+					left: 100px;
+					cursor: pointer;
+					transition: transform 0.5s ease-in-out;
+
+					@include mobile-landscape {
+						width: 20px;
+						height: 20px;
+						top: 20px;
+						left: 45px;
+					}
+
+					&:hover {
+						transform: scale(1.125);
+					}
+
+					&.playing {
+						background: url("../images/specker.png") no-repeat;
+						background-size: contain;
+					}
+
+					&.mute {
+						background: url("../images/pause.png") no-repeat;
+						background-size: contain;
+					}
+				}
+
+				// border-radius: clamp(16px, 2vw, 24px);
+				img {
+					width: 100%;
+					height: auto;
+				}
+			}
+		}
+
+		@keyframes slowInFastOut {
+			0% {
+				transform: scale(1);
+			}
+
+			65% {
+				transform: scale(1.1);
+			}
+
+			100% {
+				transform: scale(1);
+			}
+		}
 	}
+
 	.infobtnPopup {
 		display: none;
 		opacity: 0;

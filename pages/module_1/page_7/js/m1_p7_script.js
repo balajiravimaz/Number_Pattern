@@ -31,6 +31,11 @@ var totalSection = 0;
 var prevSectionCnt = -1;
 var sectionTopPos = [];
 var playMainAudio = false;
+
+var dataValue = []; var currentPattern = null; var currentIndex = 0;
+var patterns = [];
+
+
 // ------------------ common function start ------------------------------------------------------------------------
 $(document).ready(function () {
   //console.log('Page ready')
@@ -52,11 +57,12 @@ function _pageLoaded() {
 
   //addSlideData();
   console.log(_pageData.sections, _pageData.sections[0].backBtnSrc, "pageDAtat")
+  appState.pageCount = _controller.pageCnt - 1;
   addSectionData();
+
   $("#f_header").css({ backgroundImage: `url(${_pageData.sections[0].headerImg})` });
   $("#f_header").find("#f_courseTitle").css({ backgroundImage: `url(${_pageData.sections[0].headerText})` });
   $(".home_btn").css({ backgroundImage: `url(${_pageData.sections[0].backBtnSrc})` });
-  $(".home_btn").attr("data-tooltip", "Back");
   // playBtnSounds(_pageData.sections[sectionCnt - 1].endAudio);
   //   showEndAnimations();
   checkGlobalAudio();
@@ -84,7 +90,6 @@ function addSectionData() {
       audioEnd(function () {
         $(".dummy-patch").hide();
         resetSimulationAudio();
-        window.enableCaterpillarMovement();
       })
       $("#section-" + sectionCnt)
         .find(".content-holder")
@@ -115,33 +120,18 @@ function addSectionData() {
 
       const numberObjects =
         _pageData.sections[sectionCnt - 1].content.numberObjects;
+      patterns = numberObjects;
+      loadNewPattern();
 
       // pick ONE random pattern
+      const pattern = getRandomPattern(numberObjects);
 
       let htmlContent = "";
-      // htmlContent += `<div class="game-area">`;      
+      htmlContent += `<div class="game-area">`;
+      htmlContent += `<div class="shelf"><div class="drop-box">${getShelfHTML(pattern)}</div></div>`;
+      htmlContent += `<div class="cups">${getCupHTML(pattern)}</div>`;
+      htmlContent += `</div>`;
 
-
-      // htmlContent += `<div id="game-container">`
-      // htmlContent += `<div class="game-grid"></div>`
-      // htmlContent += `<div id="game-canvas"></div>`
-      // htmlContent += `</div>`
-      // htmlContent += `<div class="dpad">`
-      // htmlContent += `<div class="dpad-center"></div>`
-      // htmlContent += `<button class="dpad-btn dpad-up" data-dir="up">
-      //       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M18 15l-6-6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      //   </button>`
-      // htmlContent += `<button class="dpad-btn dpad-down" data-dir="down">
-      //       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      //   </button>`
-      // htmlContent += ` <button class="dpad-btn dpad-left" data-dir="left">
-      //       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      //   </button>`
-      // htmlContent += `<button class="dpad-btn dpad-right" data-dir="right">
-      //       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      //   </button>`
-      // htmlContent += `</div>`
-      // htmlContent += `</div>`;
 
 
       let headerConent = "";
@@ -191,20 +181,35 @@ function addSectionData() {
         .append(
           popupDiv +
           headerConent +
-          '<div class="body"><div class="animat-container"> <div class="dummy-patch"></div></div> </div>'
+          '<div class="body"><div class="animat-container"> <div class="dummy-patch"></div>' +
+          htmlContent +
+          "</div> </div>"
         );
 
-      const mountEl = $("#section-" + sectionCnt)
-        .find(".content-holder")
-        .find(".col-left")
-        .find(".content")
-        .find(".content-bg")
-        .find(".content-style")
-        .find(".body")
-        .find(".animat-container")[0]; // 👈 important
 
-      initSnakeGameAtMount(mountEl);
+      /* enableDragAndDrop({
+        cupsSelector: ".cups .cup",
+        slotsSelector: ".shelf .slot",
 
+        onCorrectDrop: (cup, slot) => {
+          cup.classList.remove("success");
+          void cup.offsetWidth;
+          cup.classList.add("success");
+          playFeedbackAudio(_pageData.sections[sectionCnt - 1].correctAudio);
+        },
+
+        onWrongDrop: (cup) => {
+          playFeedbackAudio(_pageData.sections[sectionCnt - 1].wrongAudio);
+        },
+
+        onGameCompleted: () => {
+          console.log("Game Completed");
+          setTimeout(function () {
+            playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
+            showEndAnimations();
+          }, 1000)
+        }
+      }); */
 
 
 
@@ -254,572 +259,6 @@ function addSectionData() {
   }
 }
 
-
-function initSnakeGameAtMount(mountEl) {
-  if (!mountEl || !mountEl.appendChild) {
-    throw new Error("Invalid mount element");
-  }
-
-  const originalBody = document.body;
-
-  try {
-    Object.defineProperty(document, "body", {
-      value: mountEl,
-      configurable: true
-    });
-
-    // 🔽 this runs your existing game code
-    initSnakeGame();
-
-  } finally {
-    Object.defineProperty(document, "body", {
-      value: originalBody,
-      configurable: true
-    });
-  }
-}
-
-function initSnakeGame() {
-  /* =========================
-     DOM CREATION
-  ========================= */
-  function createElement(tag, className, parent) {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (parent) parent.appendChild(el);
-    return el;
-  }
-
-  let numberSequence = [];
-  const app = createElement("div", "game-container", document.body);
-  const gameWrapper = createElement("div", "game-wrapper", app);
-  const canvas = createElement("canvas", null, gameWrapper);
-  const ctx = canvas.getContext("2d");
-
-  const popup = createElement("div", "popup hidden", gameWrapper);
-  popup.innerHTML = `<h2>🎉 Congrats!</h2>`;
-  const replayBtn = createElement("button", null, popup);
-  replayBtn.textContent = "Replay";
-
-  const wrongPopup = createElement("div", "popup hidden", gameWrapper);
-  wrongPopup.innerHTML = `<h2>❌ Wrong!</h2>`;
-  const retryBtn = createElement("button", null, wrongPopup);
-  retryBtn.textContent = "Try Again";
-
-  /* =========================
-     GAME CONFIG & STATE
-  ========================= */
-  const BASE_TILE_COUNT = 10;
-  let tileCountX = 10;
-  let tileCountY = 10;
-  let tileSize = 0;
-
-  // Idle System Variables
-  let idleTimer = null;
-  let isIdle = false;
-  let animationFrameId = null;
-  const IDLE_DURATION = 5000; // 5 Seconds
-
-  // Offsets to center the grid
-  let gridOffsetX = 0;
-  let gridOffsetY = 0;
-
-  const PATTERNS = [
-    { start: 1, end: 10 },
-    { start: 11, end: 20 }
-  ];
-
-  let currentPattern;
-  let nextValue;
-  let foods = [];
-  let snake = [];
-  
-  // State Flags
-  let isGameActive = false;      
-  let isProcessingMove = false;  
-  const MOVE_DELAY = 300;        
-
-  /* =========================
-     CONTROLS DOM
-  ========================= */
-const controls = createElement("div", "controls", app);
-
-function createButton(dir, parent = controls) {
-  const btn = createElement("button", null, parent);
-  btn.dataset.dir = dir;
-
-  // add image inside button
-  const img = document.createElement("img");
-  img.src = `pages/module_1/page_7/images/${dir}.png`; // directly use dir for image filename
-  // img.style.width = "100%";
-  img.style.height = "auto";
-  btn.appendChild(img);
-  return btn;
-}
-
-
-// create buttons
-createButton("up");
-const mid = createElement("div", "middle", controls);
-createButton("left", mid);
-createButton("right", mid);
-createButton("down");
-
-
-  /* =========================
-     CANVAS HELPERS
-  ========================= */
-  function resizeCanvas() {
-    const rect = gameWrapper.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      requestAnimationFrame(resizeCanvas);
-      return;
-    }
-
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-
-    // Calculate tile size
-    tileSize = Math.min(canvas.width, canvas.height) / (BASE_TILE_COUNT + 1); 
-
-    // Calculate integer tile counts (Number of CELLS)
-    tileCountX = Math.floor(canvas.width / tileSize) - 1; 
-    tileCountY = Math.floor(canvas.height / tileSize) - 1;
-
-    // Center logic
-    const usedWidth = tileCountX * tileSize; 
-    const usedHeight = tileCountY * tileSize;
-
-    gridOffsetX = (canvas.width - usedWidth) / 2;
-    gridOffsetY = (canvas.height - usedHeight) / 2;
-
-    render();
-  }
-
-  function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  }
-
-  function drawGrid() {
-    ctx.save();
-    const radius = 3;
-    const color = "#b0b0b0";
-    ctx.fillStyle = color;
-
-    for (let y = 0; y <= tileCountY; y++) {
-      for (let x = 0; x <= tileCountX; x++) {
-        // Draw dots at corners
-        const px = gridOffsetX + (x * tileSize) - (tileSize/2); 
-        const py = gridOffsetY + (y * tileSize) - (tileSize/2); 
-        
-        ctx.beginPath();
-        // Shift drawing by +tileSize/2 so dots surround the cells
-        ctx.arc(px + tileSize/2, py + tileSize/2, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
-  /* =========================
-     DRAW FUNCTIONS
-  ========================= */
-  function drawCircle(x, y, r, color) {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  function drawText(text, x, y) {
-    ctx.save();
-    ctx.font = `bold ${tileSize * 0.4}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#ffffff";
-    ctx.strokeText(text, x, y);
-    ctx.fillStyle = "#1b1b1b";
-    ctx.fillText(text, x, y);
-    ctx.restore();
-  }
-
-  const headImg = new Image();
-  headImg.src = "pages/module_1/page_7/images/head.png";
-  const bodyImg = new Image();
-  bodyImg.src = "pages/module_1/page_7/images/body.png";
-
-function drawSnake() {
-    // 1. Adjust Sizes
-    // Body: 1.02x ensures they touch "only the side" without a large overlap,
-    // closing the gap while keeping the round shape distinct.
-    const bodySize = tileSize * 1.02; 
-    
-    // Head: 1.4x makes it larger than the body
-    const headSize = tileSize * 1.4; 
-
-    // Head Lift: Moves the head slightly upwards visually
-    const headUpOffset = tileSize * 0.15; 
-
-    // 2. Draw BODY segments first (Tail to Neck)
-    for (let i = snake.length - 1; i > 0; i--) {
-        const seg = snake[i];
-        
-        let x = gridOffsetX + (seg.x * tileSize);
-        let y = gridOffsetY + (seg.y * tileSize);
-        
-        // Center position
-        const cx = x + tileSize / 2;
-        const cy = y + tileSize / 2;
-
-        ctx.drawImage(bodyImg, cx - bodySize/2, cy - bodySize/2, bodySize, bodySize);
-        
-        if (numberSequence[i - 1] != null) {
-          drawText(numberSequence[i - 1], cx, cy);
-        }
-    }
-
-    // 3. Draw HEAD
-    if (snake.length > 0) {
-        const seg = snake[0];
-        let x = gridOffsetX + (seg.x * tileSize);
-        let y = gridOffsetY + (seg.y * tileSize);
-        const cx = x + tileSize / 2;
-        const cy = y + tileSize / 2;
-
-        ctx.save();
-        ctx.translate(cx, cy);
-
-        // Flip logic for Left direction
-        if (snake.length > 1 && seg.x < snake[1].x) {
-             ctx.scale(-1, 1); 
-        } 
-        
-        // Draw Head with vertical offset (subtracting from Y moves it UP)
-        ctx.drawImage(
-            headImg, 
-            -headSize / 2, 
-            (-headSize / 2) - headUpOffset, 
-            headSize, 
-            headSize
-        );
-        ctx.restore();
-    }
-  }
-
-let startTime = Date.now();
-
-function drawFood() {
-  const time = (Date.now() - startTime) / 600; // controls pulse speed
-
-  foods.forEach(f => {
-    const cx = gridOffsetX + (f.x * tileSize) + (tileSize / 2);
-    const cy = gridOffsetY + (f.y * tileSize) + (tileSize / 2);
-    const baseRadius = tileSize * 0.35;
-
-    // --- Pulse effect ---
-    // scale oscillates between 0.9 and 1.1 for subtle beat
-    const scale = 1 + 0.1 * Math.sin(time + f.x + f.y);
-
-    const radius = baseRadius * scale;
-
-    // --- Draw Circle Fill ---
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffd17c";
-    ctx.fill();
-
-    // --- Draw Circle Border ---
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "#c08737";
-    ctx.stroke();
-
-    // --- Draw Number (scaled with circle) ---
-    ctx.fillStyle = "#000";
-    ctx.font = `${tileSize * 0.4 * scale}px Arial`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    drawText(f.value, cx, cy);
-  });
-
-  requestAnimationFrame(drawFood); // keep animation running
-}
-
-
-  function render() {
-    clearCanvas();
-    drawGrid();
-    drawSnake();
-    drawFood();
-  }
-
-  /* =========================
-     GAME LOGIC
-  ========================= */
-  function randomEmptyCell() {
-    let pos;
-    let attempts = 0;
-    do {
-      pos = {
-        x: Math.floor(Math.random() * tileCountX),
-        y: Math.floor(Math.random() * tileCountY)
-      };
-      attempts++;
-    } while (
-      attempts < 100 &&
-      (snake.some(s => s.x === pos.x && s.y === pos.y) ||
-       foods.some(f => f.x === pos.x && f.y === pos.y))
-    );
-    return pos;
-  }
-
-  function spawnFoods() {
-    const correctPos = randomEmptyCell();
-    let wrongPos;
-    let attempts = 0;
-    do {
-      wrongPos = randomEmptyCell();
-      attempts++;
-    } while (attempts < 100 && wrongPos.x === correctPos.x && wrongPos.y === correctPos.y);
-
-    let wrongValue;
-    do {
-      wrongValue =
-        currentPattern.start +
-        Math.floor(Math.random() * (currentPattern.end - currentPattern.start + 1));
-    } while (wrongValue === nextValue);
-
-    foods = [
-      { ...correctPos, value: nextValue, correct: true },
-      { ...wrongPos, value: wrongValue, correct: false }
-    ];
-  }
-
-  function moveSnake(dir) {
-    const head = snake[0];
-    const newX = head.x + dir.x;
-    const newY = head.y + dir.y;
-
-    // Check Bounds
-    if (newX < 0 || newX >= tileCountX || newY < 0 || newY >= tileCountY) {
-      return; 
-    }
-
-    const newHead = { x: newX, y: newY };
-    
-    // Check Self Collision
-    if(snake.some((s, index) => index !== 0 && s.x === newHead.x && s.y === newHead.y)) {
-        return; 
-    }
-
-    const hitFood = foods.find(f => f.x === newHead.x && f.y === newHead.y);
-
-    snake.unshift(newHead);
-
-    if (hitFood && hitFood.correct) {
-      // ✅ Correct food
-      numberSequence.push(nextValue);
-      nextValue++;
-
-      if (nextValue > currentPattern.end) {
-        render();
-        popup.classList.remove("hidden");
-        isGameActive = false; 
-        return;
-      }
-      spawnFoods();
-    } else if (hitFood && !hitFood.correct) {
-      // ❌ Wrong food
-      snake.shift(); // Undo move
-      wrongPopup.classList.remove("hidden");
-    } else {
-      // Normal move
-      snake.pop();
-    }
-
-    render();
-  }
-
-  /* =========================
-     STATE MANAGEMENT
-  ========================= */
-
-  window.enableCaterpillarMovement = function() {
-      console.log("Caterpillar inputs unlocked");
-      isGameActive = true;
-  };
-
-  retryBtn.onclick = () => {
-    wrongPopup.classList.add("hidden");
-    resetSnakeSamePattern();
-    isGameActive = true;
-  };
-  
-  replayBtn.onclick = startGame;
-
-  function resetSnakeSamePattern() {
-    numberSequence = [];
-    snake = [
-      { x: 4, y: 5 },
-      { x: 3, y: 5 },
-      { x: 2, y: 5 },
-      { x: 1, y: 5 },
-      { x: 0, y: 5 }
-    ];
-    for (let i = 1; i < snake.length; i++) {
-      numberSequence.push(currentPattern.start + i - 1);
-    }
-    spawnFoods();
-    render();
-  }
-
-  function getNextPattern() {
-    let p;
-    do {
-      p = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
-    } while (p === currentPattern);
-    return p;
-  }
-
-  function initSnake(pattern) {
-    numberSequence = [];
-    const body = [
-      { x: 4, y: 5 },
-      { x: 3, y: 5 },
-      { x: 2, y: 5 },
-      { x: 1, y: 5 },
-      { x: 0, y: 5 }
-    ];
-    for (let i = 1; i < body.length; i++) {
-      numberSequence.push(pattern.start + i - 1);
-    }
-    return body;
-  }
-
-  let imagesLoaded = 0;
-  headImg.onload = bodyImg.onload = () => {
-    imagesLoaded++;
-    if (imagesLoaded === 2) {
-      startGame();
-    }
-  };
-
-  function startGame() {
-     
-
-    popup.classList.add("hidden");
-    wrongPopup.classList.add("hidden");
-    
-    currentPattern = getNextPattern();
-    snake = initSnake(currentPattern);
-    nextValue = currentPattern.start + snake.length - 1;
-    foods = [];
-    
-    isGameActive = false; 
-    isProcessingMove = false;
-
-    resizeCanvas();
-    spawnFoods();
-    render();
-  }
-
-  /* =========================
-     INPUT HANDLERS
-  ========================= */
-  
-  function setDirection(dirKey) {
-    if (!isGameActive) return;
-    if (isProcessingMove) return;
-    if (!wrongPopup.classList.contains("hidden")) return;
-    if (!popup.classList.contains("hidden")) return;
-
-    let dirVec = { x: 0, y: 0 };
-    if (dirKey === "up") dirVec = { x: 0, y: -1 };
-    if (dirKey === "down") dirVec = { x: 0, y: 1 };
-    if (dirKey === "left") dirVec = { x: -1, y: 0 };
-    if (dirKey === "right") dirVec = { x: 1, y: 0 };
-
-    if (snake.length > 1) {
-        const head = snake[0];
-        const neck = snake[1];
-        if (head.x + dirVec.x === neck.x && head.y + dirVec.y === neck.y) {
-            return;
-        }
-    }
-
-    isProcessingMove = true;
-    moveSnake(dirVec);
-
-    setTimeout(() => {
-        isProcessingMove = false;
-    }, MOVE_DELAY);
-  }
-
-  document.addEventListener("keydown", e => {
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
-        e.preventDefault();
-    }
-
-    if (e.key === "ArrowUp") setDirection("up");
-    if (e.key === "ArrowDown") setDirection("down");
-    if (e.key === "ArrowLeft") setDirection("left");
-    if (e.key === "ArrowRight") setDirection("right");
-  });
-
-  document.querySelectorAll(".controls button").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-        e.preventDefault(); 
-        setDirection(btn.dataset.dir)
-    });
-  });
-
-  window.addEventListener("resize", () => {
-    resizeCanvas();
-  });
-  window.addEventListener("orientationchange", resizeCanvas);
-
-  /* =========================
-     IDLE SYSTEM HELPERS
-  ========================= */
-  
-  function resetIdleTimer() {
-    // 1. Clear existing timer and state
-    clearTimeout(idleTimer);
-    if (isIdle) {
-      isIdle = false;
-      cancelAnimationFrame(animationFrameId); // Stop the wiggle loop
-      render(); // Snap back to static position immediately
-    }
-
-    // 2. Only start timer if game is active
-    if (isGameActive) {
-      idleTimer = setTimeout(triggerIdleState, IDLE_DURATION);
-    }
-  }
-
-  function triggerIdleState() {
-    if (!isGameActive) return;
-
-    isIdle = true;
-    
-    // "Gentle reminder only once"
-    console.log("👋 It's your turn! Find the next number."); 
-    // (Optional: You could show a DOM tooltip here if you wanted)
-
-    // Start the animation loop for the wiggle/highlight
-    animateIdleLoop();
-  }
-
-  function animateIdleLoop() {
-    if (!isIdle) return;
-    render(); // Redraws canvas with wiggle math
-    animationFrameId = requestAnimationFrame(animateIdleLoop);
-  }
-
-
-
-}
-
 function playFeedbackAudio(_audio) {
   $(".dummy-patch").show();
   playBtnSounds(_audio)
@@ -827,6 +266,374 @@ function playFeedbackAudio(_audio) {
     $(".dummy-patch").hide();
   })
 }
+
+
+function getRandomPattern(patterns) {
+  if (!Array.isArray(patterns) || patterns.length === 0) return null;
+
+  //const lastId = getLastPatternId();
+
+  let availablePatterns = patterns;
+
+  /* if (!isNaN(lastId) && patterns.length > 1) {
+    availablePatterns = patterns.filter(
+      p => p.patternId !== lastId
+    );
+  } */
+
+  const selected =
+    availablePatterns[Math.floor(Math.random() * availablePatterns.length)];
+
+  //saveLastPatternId(selected.patternId);
+
+  return selected;
+}
+
+
+
+/* ---------------- Correct Next Value ---------------- */
+function updateCorrectNextValue() {
+  if (!currentPattern || !currentPattern.sequence) return;
+
+  // Get the repeating pattern (first 2 values from the sequence)
+  const repeatingPattern = currentPattern.sequence.slice(0, 2); // ["apple", "banana"]
+
+  // The last value filled is the last entry in dataValue
+  const lastFilledValue = dataValue[dataValue.length - 1];  // e.g., "apple" or "banana"
+
+  // Determine the next value based on the last filled value
+  const nextIndex = repeatingPattern.indexOf(lastFilledValue) === 0 ? 1 : 0; // Alternate between apple and banana
+
+  // Set the correct next value
+  currentPattern.correctNextValue = repeatingPattern[nextIndex];
+}
+
+
+/* ---------------- Shelf ---------------- */
+function getShelfHTML(pattern) {
+  let html = "";
+
+  pattern.sequence.slice(0, 3).forEach(value => {
+    const item = pattern.items.find(i => i.value === value);
+    if (!item) return;
+
+    dataValue.push(value); // Track the initial sequence (first 3 slots)
+    html += `
+      <div class="slot filled" data-value="${value}">
+        <img src="${item.img}" alt="${item.value}">
+      </div>
+    `;
+  });
+
+  // Add 3 empty slots
+  for (let i = 0; i < 3; i++) {
+    html += `<div class="slot empty"></div>`;
+  }
+
+  return html;
+}
+
+/* ---------------- Cups ---------------- */
+function getCupHTML(pattern) {
+  if (!pattern) return "";
+
+  const correctItem = pattern.items.find(
+    i => i.value === pattern.correctNextValue
+  );
+
+  // Pick an incorrect item that is NOT the correct one
+  const incorrectItem = pattern.items.find(
+    i => i.value !== pattern.correctNextValue
+  );
+
+  if (!correctItem || !incorrectItem) return "";
+
+  // Always show correct first, incorrect second (no shuffle)
+  const options = [correctItem, incorrectItem];
+
+  return options.map(item => `
+    <div class="cupContain">
+      <div class="round_bg">
+        <div class="cup" data-value="${item.value}">
+          <img src="${item.img}" alt="${item.value}">
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ---------------- Interaction ---------------- */
+$(document).on("pointerdown", ".cup", function (e) {
+  e.preventDefault();
+
+  if (!currentPattern) return;
+
+  const selectedValue = $(this).data("value");
+  const correctValue = currentPattern.correctNextValue;
+
+  if (selectedValue !== correctValue) {
+    wrongFeedback(this);
+    return;
+  }
+
+  correctFeedback(this);
+  fillNextSlot(selectedValue);
+});
+
+/* ---------------- Fill Logic ---------------- */
+function fillNextSlot(value) {
+  const $slot = $(".slot.empty").first();
+  const item = currentPattern.items.find(i => i.value === value);
+  if (!$slot.length || !item) return;
+
+  // Fill the empty slot with the selected value
+  $slot
+    .removeClass("empty")
+    .addClass("filled sparkle")
+    .attr("data-value", value)
+    .html(`<img src="${item.img}" alt="${item.value}">`);
+
+  setTimeout(() => $slot.removeClass("sparkle"), 600);
+
+  // Track progression
+  dataValue.push(value);
+
+  // Update next expected value
+  updateCorrectNextValue();
+
+  // If all slots are filled, load a new pattern
+  currentIndex++;
+
+  if (currentIndex === 3) {
+    setTimeout(loadNewPattern, 800);
+    playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
+    showEndAnimations();
+  } else {
+    renderCups();
+  }
+}
+
+/* ---------------- Feedback ---------------- */
+function correctFeedback(cup) {
+  cup.classList.remove("success");
+  void cup.offsetWidth;
+  cup.classList.add("success");
+  playFeedbackAudio(_pageData.sections[sectionCnt - 1].correctAudio);
+}
+
+function wrongFeedback(cup) {
+  $(cup).addClass("shake");
+  playFeedbackAudio(_pageData.sections[sectionCnt - 1].wrongAudio);
+}
+
+function playVoice(type) {
+  if (type === "instruction") {
+    console.log("Look at the pattern. Tap the correct bead.");
+  } else {
+    console.log(type === "good-job" ? "Good job!" : "Try again!");
+  }
+}
+
+
+/* ---------------- Pattern Load ---------------- */
+function loadNewPattern() {
+  if (!patterns || !patterns.length) {
+    console.warn("Patterns not available");
+    return;
+  }
+
+  currentIndex = 0;
+  dataValue = []; // reset instead of redeclare
+
+  currentPattern = patterns[Math.floor(Math.random() * patterns.length)];
+
+  $(".shelf").html(getShelfHTML(currentPattern));
+
+  updateCorrectNextValue(); // first missing value
+  renderCups();
+
+  playVoice("instruction");
+
+  setTimeout(() => {
+    if ($(".slot.empty").length > 0) playVoice("instruction");
+  }, 5000);
+}
+
+
+/* ---------------- Render ---------------- */
+function renderCups() {
+  $(".cups").html(getCupHTML(currentPattern));
+}
+
+
+//----------------------------------------------------------
+function isSameOrder(items, sequence) {
+  if (items.length !== sequence.length) return false;
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].value !== sequence[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function shuffleItemsAvoidCorrect(items, sequence) {
+  let shuffled;
+  let attempts = 0;
+
+  do {
+    shuffled = shuffleArray(items);
+    attempts++;
+  } while (isSameOrder(shuffled, sequence) && attempts < 10);
+
+  return shuffled;
+}
+
+
+
+function saveLastPatternId(id) {
+  localStorage.setItem("lastPatternId", id);
+}
+
+function getLastPatternId() {
+  return Number(localStorage.getItem("lastPatternId"));
+}
+
+
+
+function resetCupPosition(cup) {
+  cup.style.left = `${cup.dataset.startX}px`;
+  cup.style.top = `${cup.dataset.startY}px`;
+}
+
+// function enableDragAndDrop({
+//   cupsSelector,
+//   slotsSelector,
+//   onCorrectDrop,
+//   onWrongDrop,
+//   onGameCompleted
+// }) {
+//   const cups = document.querySelectorAll(cupsSelector);
+//   const slots = document.querySelectorAll(slotsSelector);
+
+//   let activeCup = null;
+//   let dragImg = null;
+//   let offsetX = 0;
+//   let offsetY = 0;
+
+//   cups.forEach(cup => {
+//     cup.addEventListener("pointerdown", startDrag);
+//   });
+
+//   function startDrag(e) {
+//     if (activeCup) return;
+//     e.preventDefault();
+//     playClickThen();
+
+//     activeCup = e.currentTarget;
+//     const img = activeCup.querySelector("img");
+
+//     // clone image
+//     dragImg = img.cloneNode(true);
+//     dragImg.style.position = "fixed";
+//     dragImg.style.width = img.offsetWidth + "px";
+//     dragImg.style.height = img.offsetHeight + "px";
+//     dragImg.style.pointerEvents = "none";
+//     dragImg.style.zIndex = "9999";
+
+//     document.body.appendChild(dragImg);
+
+//     const rect = img.getBoundingClientRect();
+//     offsetX = e.clientX - rect.left;
+//     offsetY = e.clientY - rect.top;
+
+//     moveAt(e.clientX, e.clientY);
+
+//     document.addEventListener("pointermove", onMove);
+//     document.addEventListener("pointerup", endDrag);
+//   }
+
+//   function moveAt(x, y) {
+//     dragImg.style.left = x - offsetX + "px";
+//     dragImg.style.top = y - offsetY + "px";
+//   }
+
+//   function onMove(e) {
+//     moveAt(e.clientX, e.clientY);
+//   }
+
+//   function endDrag(e) {
+//     document.removeEventListener("pointermove", onMove);
+//     document.removeEventListener("pointerup", endDrag);
+
+//     let dropped = false;
+
+//     slots.forEach(slot => {
+//       const rect = slot.getBoundingClientRect();
+
+//       if (
+//         e.clientX > rect.left &&
+//         e.clientX < rect.right &&
+//         e.clientY > rect.top &&
+//         e.clientY < rect.bottom
+//       ) {
+//         dropped = true;
+//         handleDrop(slot);
+//       }
+//     });
+
+//     const cupRef = activeCup;
+
+//     dragImg.remove();
+//     dragImg = null;
+//     activeCup = null;
+
+//     // if (!dropped && cupRef) {
+//     //   onWrongDrop?.(cupRef);
+//     // }
+//   }
+
+//   function handleDrop(slot) {
+//     if (!activeCup || slot.children.length > 0) {
+//       onWrongDrop?.(activeCup);
+//       return;
+//     }
+
+//     const cupValue = activeCup.dataset.value;
+//     const slotValue = slot.dataset.value;
+
+//     if (cupValue === slotValue) {
+//       slot.appendChild(activeCup);
+
+//       // 🔒 FULLY DISABLE FUTURE DRAG
+//       activeCup.style.pointerEvents = "none";
+//       activeCup.style.touchAction = "none";
+//       activeCup.removeEventListener("pointerdown", startDrag);
+
+//       onCorrectDrop?.(activeCup, slot);
+
+//       if (isGameCompleted(slots)) {
+//         onGameCompleted?.();
+//       }
+//     }
+
+//     else {
+//       onWrongDrop?.(activeCup);
+//     }
+//   }
+// }
+
+
+// function isGameCompleted(slots) {
+//   return [...slots].every(slot =>
+//     slot.children.length === 1 &&
+//     slot.children[0].dataset.value === slot.dataset.value
+//   );
+// }
+
+
+
 
 
 
@@ -1001,8 +808,6 @@ function showEndAnimations() {
   });
 }
 
-
-
 function closeIntroPop(ldx) {
   playClickThen();
   AudioController.play();
@@ -1024,8 +829,6 @@ function replayLastAudio() {
     enableButtons();
   })
 }
-
-
 
 
 function enableButtons() {

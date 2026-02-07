@@ -59,7 +59,7 @@ function _pageLoaded() {
   // console.log(_pageData.sections, _pageData.sections[0].backBtnSrc, "pageDAtat")
   addSectionData();
   initPageAnimations();
-  appState.pageCount = _controller.pageCnt - 1;
+  appState.pageCount = 4;
   $("#f_header").css({ backgroundImage: `url(${_pageData.sections[0].headerImg})` });
   $("#f_header").find("#f_courseTitle").css({ backgroundImage: `url(${_pageData.sections[0].headerText})` });
   $(".home_btn").css({ backgroundImage: `url(${_pageData.sections[0].backBtnSrc})` });
@@ -348,6 +348,7 @@ function loadPattern(index) {
 
 function handlePatternCompleted() {
   const gameArea = document.querySelector(".game-area");
+    console.log("Pattern completed! Loading next pattern...");
 
   gameArea.classList.add("is-fading");
   setTimeout(() => {
@@ -616,26 +617,26 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
 
     // 2. Create drag image (clone)
     dragImg = img.cloneNode(true);
-    
+
     // 3. Fix Styling to ensure "Perfect Position"
     dragImg.style.position = "fixed";
     dragImg.style.width = img.getBoundingClientRect().width + "px"; // Use rect width for accuracy
     dragImg.style.height = img.getBoundingClientRect().height + "px";
     dragImg.style.pointerEvents = "none";
     dragImg.style.zIndex = "9999";
-    
+
     // IMPORTANT: Reset margins and transforms to prevent cursor offset issues
     dragImg.style.margin = "0";
     dragImg.style.padding = "0";
-    dragImg.style.transform = "none"; 
+    dragImg.style.transform = "none";
     dragImg.style.display = "block"; // Prevents inline spacing issues
 
     document.body.appendChild(dragImg);
 
     // 4. Calculate offset strictly based on the image's current screen position
     const rect = img.getBoundingClientRect();
-    offsetX = e.clientX - rect.left; 
-    offsetY = e.clientY - rect.top;  
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
 
     // Move drag image to follow cursor immediately
     moveAt(e.clientX, e.clientY);
@@ -668,7 +669,7 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
     // Make the original visible again immediately.
     // If we drop successfully, it moves. If we fail, it stays/animates.
     if (activeCup) {
-        activeCup.style.opacity = "1";
+      activeCup.style.opacity = "1";
     }
 
     let droppedOnSlot = false;
@@ -680,13 +681,13 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
         handleDrop(slot);
       }
     });
-    
+
     // Note: If droppedOnSlot is false, the activeCup (which is now opacity: 1)
     // simply appears back at its original position because we never moved it in the DOM.
     // This satisfies "otherwise it should go back original position".
-    
+
     if (!droppedOnSlot) {
-        activeCup = null;
+      activeCup = null;
     }
   }
 
@@ -711,10 +712,8 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
     activeCup.removeEventListener("pointerdown", startDrag);
 
     if (cupValue === slotValue) {
-      // Logic for Correct Drop
-      activeCup = null; // Release reference
-      onCorrectDrop?.(activeCup, slot);
-
+      onCorrectDrop?.(activeCup, slot); // <- call first
+      activeCup = null; // <- then null
       if (isGameCompleted(slots)) {
         onGameCompleted?.();
       }
@@ -779,12 +778,13 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
       cup.addEventListener("pointerdown", startDrag);
     }, DURATION);
   }
-
   function isGameCompleted(slots) {
-    return [...slots].every(
-      slot => slot.children.length === 1 && slot.children[0].dataset.value === slot.dataset.value
-    );
+    return [...slots].every(slot => {
+      const cup = slot.querySelector(".cup");
+      return cup && cup.dataset.value === slot.dataset.value;
+    });
   }
+
 }
 
 

@@ -5,21 +5,8 @@
     "audioIndex": 0
   },
   "bgImgs": [
-   
     {
-      "imageSRC": "pages/module_1/page_7/images/down.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/top.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/left.png",
-      "altText": ""
-    },
-    {
-      "imageSRC": "pages/module_1/page_7/images/right.png",
+      "imageSRC": "pages/module_1/page_7/images/banana.png",
       "altText": ""
     },
     {
@@ -58,7 +45,10 @@
       "imageSRC": "pages/module_1/page_7/images/bg_pause.png",
       "altText": ""
     },
-    
+    {
+      "imageSRC": "pages/module_1/page_7/images/correct.png",
+      "altText": ""
+    },
     {
       "imageSRC": "pages/module_1/page_7/images/header_bg.png",
       "altText": ""
@@ -94,8 +84,15 @@
     {
       "imageSRC": "pages/module_1/page_7/images/replay.png",
       "altText": ""
+    },
+    {
+      "imageSRC": "pages/module_1/page_7/images/right_bg.png",
+      "altText": ""
+    },
+    {
+      "imageSRC": "pages/module_1/page_7/images/wrong.png",
+      "altText": ""
     }
-        
   ],
   "imgCollage": {
     "desktop": [
@@ -117,17 +114,16 @@
       "headerTitle": "Heavy - Light",
       "headerImg": "pages/module_1/page_7/images/header_bg.png",
       "headerText": "pages/module_1/page_7/images/header_title.png",
-            
       "ost": "",
-      "iText": "Hello! Let's help the caterpillar follow the number pattern!",
+      "iText": "<span>Tap</span> the correct bead to complete the pattern <span class='audio'></span>",
       "endAudio": "",
-      "infoImg": "pages/module_1/page_7/images/fun_game.png",      
-      "backBtnSrc":"assets/images/back.png",
+      "infoImg": "pages/module_1/page_7/images/fun_game.png",
+      "backBtnSrc": "pages/module_1/page_7/images/back.png",
       "infoAudio": "",
       "introAudio": "pages/module_1/page_7/audios/intro_audio.mp3",
-      "correctAudio":"pages/module_1/page_7/audios/good_job.mp3",
-      "wrongAudio":"pages/module_1/page_7/audios/try_again.mp3",
-      "finalAudio":"pages/module_1/page_7/audios/final_audio.mp3",
+      "correctAudio": "pages/module_1/page_7/audios/good_job.mp3",
+      "wrongAudio": "pages/module_1/page_7/audios/try_again.mp3",
+      "finalAudio": "pages/module_1/page_7/audios/final_audio.mp3",
       "content": {
         "btnAudios": [
           "pages/module_1/page_7/audios/click.mp3",
@@ -136,45 +132,23 @@
         "numberObjects": [
           {
             "patternId": 1,
+            "type": "fruits",
             "sequence": [
-              4,
-              5,
-              6
+              "apple",
+              "banana",
+              "apple"
             ],
+            "slots": 3,
+            "correctNextValue": "banana",
+            "incorrectValue": "apple",
             "items": [
               {
-                "value": 4,
-                "img": "pages/module_1/page_7/images/4.png"
+                "value": "apple",
+                "img": "pages/module_1/page_7/images/apple.png"
               },
               {
-                "value": 5,
-                "img": "pages/module_1/page_7/images/5.png"
-              },
-              {
-                "value": 6,
-                "img": "pages/module_1/page_7/images/6.png"
-              }
-            ]
-          },
-          {
-            "patternId": 2,
-            "sequence": [
-              7,
-              8,
-              9
-            ],
-            "items": [
-              {
-                "value": 7,
-                "img": "pages/module_1/page_7/images/7.png"
-              },
-              {
-                "value": 8,
-                "img": "pages/module_1/page_7/images/8.png"
-              },
-              {
-                "value": 9,
-                "img": "pages/module_1/page_7/images/9.png"
+                "value": "banana",
+                "img": "pages/module_1/page_7/images/banana.png"
               }
             ]
           }

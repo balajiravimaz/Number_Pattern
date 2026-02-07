@@ -249,6 +249,130 @@ $bg-position: -120px -120px, 0 0, 20px 50px, 25px 55px, 50px 125px;*/
 #section-1 .content-holder .col-left .content .content-bg > .body > .image-container .btn_holder .i-txt-toolTip:hover::after {
   opacity: 1;
 }
+#section-1 .content-holder #introPopup-3 {
+  display: none;
+  opacity: 0;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+  z-index: 99999;
+}
+#section-1 .content-holder #introPopup-3 .popup-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 85%;
+  max-height: 450px;
+  transform: translate(-50%, -50%);
+  animation: fadeInPopup 0.3s ease;
+  z-index: 10002;
+  pointer-events: auto;
+  padding: 1%;
+  background: transparent;
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopclose {
+  position: absolute;
+  top: 30px;
+  right: 125px;
+  background: url("../images/close.png") no-repeat;
+  background-size: contain;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: transform 0.5s ease-in-out;
+  /* Show tooltip on hover */
+}
+@media (max-width: 950px) and (orientation: landscape) {
+  #section-1 .content-holder #introPopup-3 .popup-content .introPopclose {
+    top: 15px;
+    right: 60px;
+    width: 15px;
+    height: 15px;
+  }
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopclose:hover {
+  transform: scale(1.125);
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopclose::after {
+  content: attr(data-tooltip);
+  /* tooltip text from attribute */
+  position: absolute;
+  top: 100%;
+  /* below the button */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 2px 19px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 10px;
+  padding: 3px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  font-family: "Times New Roman", Times, serif;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  margin-top: 4px;
+  z-index: 10;
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopclose:hover::after {
+  opacity: 1;
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopAudio {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 50px;
+  left: 100px;
+  cursor: pointer;
+  transition: transform 0.5s ease-in-out;
+}
+@media (max-width: 950px) and (orientation: landscape) {
+  #section-1 .content-holder #introPopup-3 .popup-content .introPopAudio {
+    width: 20px;
+    height: 20px;
+    top: 20px;
+    left: 45px;
+  }
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopAudio:hover {
+  transform: scale(1.125);
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopAudio.playing {
+  background: url("../images/specker.png") no-repeat;
+  background-size: contain;
+}
+#section-1 .content-holder #introPopup-3 .popup-content .introPopAudio.mute {
+  background: url("../images/pause.png") no-repeat;
+  background-size: contain;
+}
+#section-1 .content-holder #introPopup-3 .popup-content img {
+  width: 100%;
+  height: auto;
+}
+@keyframes slowInFastOut {
+  0% {
+    transform: scale(1);
+  }
+  65% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 #section-1 .infobtnPopup {
   display: none;
   opacity: 0;

@@ -54,8 +54,9 @@ function _pageLoaded() {
 
     }
     appState.pageCount = 0;
+    $('.introInfo').attr('data-popup', 'introPopup-3');
     $("#f_header, #f_courseTitle").css("background", "transparent");
-    $(".home_btn").css({backgroundImage: `url(${_pageData.sections[0].backBtnSrc})`});
+    $(".home_btn").css({ backgroundImage: `url(${_pageData.sections[0].backBtnSrc})` });
     $(".home_btn").attr("data-tooltip", "Back");
     addSectionData();
     //assignAudio(_audioId, _audioIndex, _pageAudioSync, _forceNavigation, _videoId, _popupAudio, _reloadRequired);
@@ -116,8 +117,8 @@ function addSectionData() {
                     imgObj += '</button><div class="btn_info i-txt-toolTip" id="info-' + (i + 1) + '" data-tooltip="Information"></div></div>'
 
                     $('#section-' + sectionCnt).find('.content-holder').append(
-                        '<div class="infobtnPopup" id="infobtnPopup-'+(i+1)+'"><div class="popup-content">' +
-                        '<button class="infoPopAudio mute" onclick="togglePopAudio(this, \'' + _pageData.sections[sectionCnt - 1].content.sectionArray[i].infoAudio + '\')"></button>' +
+                        '<div class="infobtnPopup" id="infobtnPopup-' + (i + 1) + '"><div class="popup-content">' +
+                        '<button class="infoPopAudio mute" onclick="togglePopAudio(this, \'' + _pageData.sections[sectionCnt - 1].content.sectionArray[i].infoPopAudio + '\')"></button>' +
                         '<button class="introPopclose" data-tooltip="Close" onClick="closeIntroPop(\'.infobtnPopup\')"></button>' +
                         '<img src="' + _pageData.sections[sectionCnt - 1].content.sectionArray[i].infoImg + '" alt="">' +
                         '</div></div>'
@@ -128,6 +129,17 @@ function addSectionData() {
             $('#section-' + sectionCnt).find('.content-holder').find('.col-left').find('.content').find('.content-bg').append('<button class="goback-btn"></button><div class="body"><div class="dummypatch"></div><div class="image-container">' + imgObj + '</div></div>');
 
 
+            let infoPop = `
+<div id="introPopup-3" class="introPopup">                
+    <div class="popup-content">
+        <button class="introPopAudio mute" onclick="togglePopAudio(this, '${_pageData.sections[sectionCnt - 1].infoPopAudio}')"></button>
+        <button class="introPopclose" data-tooltip="Close" onclick="closePopup('introPopup-3')"></button>
+        <img src="${_pageData.sections[sectionCnt - 1].infoPopImage}" alt="">
+    </div>
+</div>
+`;
+
+$('#section-' + sectionCnt).find('.content-holder').append(infoPop);
 
             $('.box').off('click mouseenter mouseleave').on('click mouseenter mouseleave', onClickHandler)
             $('.btn_info').off('click mouseenter mouseleave').on('click mouseenter mouseleave', onClickinfoHandler)
@@ -332,7 +344,7 @@ function onClickHandler(evt) {
 
     var body = $('#section-' + sectionCnt).find('.content-holder').find('.col-mid').find('.content').find('.content-bg').find('.body')
     //var sectionArray = _pageData.sections[sectionCnt - 1].content.sectionArray;
-    var jumpToPage = [1, 5, 3, 4];
+    var jumpToPage = [5, 6, 3, 4];
     console.log("Jump to page", jumpToPage[num])
     //var jumpToPage = sectionArray.sectionID
 

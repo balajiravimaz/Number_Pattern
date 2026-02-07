@@ -27,6 +27,8 @@
 			"slideType": "overview",
 			"slideTitle": "overview",
 			"headerTitle": "Explore & Learn: <span>Area and Perimeter</span>",
+			"infoPopAudio":"pages/module_1/page_6/audios/info_audio.mp3",
+			"infoPopImage":"pages/module_1/page_6/images/Game_Info.png",
 			"ost": "",
 			"backBtnSrc":"assets/images/back.png",
 			"insText": "​",
