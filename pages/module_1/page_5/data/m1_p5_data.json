@@ -126,6 +126,7 @@
       "infoAudio": "",
       "introAudio": "pages/module_1/page_5/audios/intro_audio.mp3",
       "correctAudio":"pages/module_1/page_5/audios/good_job.mp3",
+      "idleAudio":"pages/module_1/page_5/audios/idle.mp3",
       "wrongAudio":"pages/module_1/page_5/audios/try_again.mp3",
       "finalAudio":"pages/module_1/page_5/audios/final_audio.mp3",
       "content": {

@@ -85,6 +85,7 @@ function addSectionData() {
       audioEnd(function () {
         $(".dummy-patch").hide();
         resetSimulationAudio();
+        // resetIdleTimer();
         window.enableCaterpillarMovement();
       })
       $("#section-" + sectionCnt)
@@ -218,6 +219,7 @@ function addSectionData() {
 
       $("#refresh").on("click", function () {
         jumtoPage(_controller.pageCnt);
+        startGame();
       });
       $("#homeBack").on("click", function () {
         jumtoPage(_controller.pageCnt - 1)
@@ -297,20 +299,15 @@ function initSnakeGame() {
   const canvas = createElement("canvas", null, gameWrapper);
   const ctx = canvas.getContext("2d");
 
-  const popup = createElement("div", "popup hidden", gameWrapper);
-  popup.innerHTML = `<h2>🎉 Congrats!</h2>`;
-  const replayBtn = createElement("button", null, popup);
-  replayBtn.textContent = "Replay";
-
-  const wrongPopup = createElement("div", "popup hidden", gameWrapper);
-  wrongPopup.innerHTML = `<h2>❌ Wrong!</h2>`;
-  const retryBtn = createElement("button", null, wrongPopup);
-  retryBtn.textContent = "Try Again";
-
-
   let headScale = 1; // 1 = normal
   let eatingAnimation = null;
   let controlsDisabled = false;
+
+
+  // 👇 NEW VARIABLES FOR WAVE ANIMATION
+  let waveAnimation = null;
+  let waveStartTime = 0;
+  const WAVE_DURATION = 800;
 
   /* =========================
      GAME CONFIG & STATE
@@ -319,12 +316,17 @@ function initSnakeGame() {
   let tileCountX = 10;
   let tileCountY = 10;
   let tileSize = 0;
+  let particles = [];
 
   // Idle System Variables
   let idleTimer = null;
   let isIdle = false;
   let animationFrameId = null;
-  const IDLE_DURATION = 5000; // 5 Seconds
+  const IDLE_DURATION = 10000; // 5 Seconds
+
+  let idleInterval = null;      // Tracks the loop
+  let idleAudioInstance = null; // Tracks the actual Audio player
+  const IDLE_REPEAT_TIME = 10000;
 
   // Offsets to center the grid
   let gridOffsetX = 0;
@@ -363,13 +365,92 @@ function initSnakeGame() {
     return btn;
   }
 
-
   // create buttons
   createButton("up");
   const mid = createElement("div", "middle", controls);
   createButton("left", mid);
   createButton("right", mid);
   createButton("down");
+
+
+  function playIdleSoundNow() {
+    if (!isIdle || !isGameActive) return;
+
+    // Safety: stop any existing sound
+    if (idleAudioInstance) {
+      idleAudioInstance.pause();
+      idleAudioInstance.currentTime = 0;
+    }
+
+    const audioPath = _pageData.sections[sectionCnt - 1].idleAudio;
+    idleAudioInstance = new Audio(audioPath);
+
+    idleAudioInstance.onended = () => {
+      if (!isIdle || !isGameActive) return;
+
+      // ⏳ AFTER audio ends → start idleTimer again
+      idleTimer = setTimeout(triggerIdleState, IDLE_DURATION);
+    };
+
+    idleAudioInstance.play().catch(e => {
+      console.log("Idle audio error:", e);
+    });
+  }
+
+
+
+  function stopIdleSoundNow() {
+    // 1. Stop the 5s Loop
+    if (idleInterval) {
+      clearInterval(idleInterval);
+      idleInterval = null;
+    }
+
+    // 2. Stop the Audio immediately
+    if (idleAudioInstance) {
+      idleAudioInstance.pause();
+      idleAudioInstance.currentTime = 0;
+      idleAudioInstance = null;
+    }
+  }
+
+
+
+  function createParticles(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 * i) / 12;
+      const speed = Math.random() * 5 + 2;
+      particles.push({
+        x: x,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.0, // 100% opacity
+        color: color
+      });
+    }
+  }
+
+  function drawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.05; // Fade out speed
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      } else {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, tileSize * 0.15, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      }
+    }
+  }
+
 
 
   /* =========================
@@ -385,14 +466,14 @@ function initSnakeGame() {
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    // Calculate tile size
+    // Calculate tile size based on both width and height
     tileSize = Math.min(canvas.width, canvas.height) / (BASE_TILE_COUNT + 1);
 
-    // Calculate integer tile counts (Number of CELLS)
+    // Integer tile counts
     tileCountX = Math.floor(canvas.width / tileSize) - 1;
     tileCountY = Math.floor(canvas.height / tileSize) - 1;
 
-    // Center logic
+    // Center grid
     const usedWidth = tileCountX * tileSize;
     const usedHeight = tileCountY * tileSize;
 
@@ -401,6 +482,7 @@ function initSnakeGame() {
 
     render();
   }
+
 
   function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -436,19 +518,26 @@ function initSnakeGame() {
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
-
   function drawText(text, x, y) {
     ctx.save();
-    ctx.font = `bold ${tileSize * 0.4}px Arial`;
+
+    ctx.font = `bold ${tileSize * 0.5}px Alphakind`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#ffffff";
-    ctx.strokeText(text, x, y);
-    ctx.fillStyle = "#1b1b1b";
+    ctx.lineWidth = "5";
+
+    // 👇 soft shadow for contrast
+    ctx.shadowColor = "rgba(255,255,255,0.8)";
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = "#000000";
     ctx.fillText(text, x, y);
+
     ctx.restore();
   }
+
 
   const headImg = new Image();
   headImg.src = "pages/module_1/page_7/images/head.png";
@@ -456,37 +545,57 @@ function initSnakeGame() {
   bodyImg.src = "pages/module_1/page_7/images/body.png";
 
   function drawSnake() {
-    // 1. Adjust Sizes
-    // Body: 1.02x ensures they touch "only the side" without a large overlap,
-    // closing the gap while keeping the round shape distinct.
-    const bodySize = tileSize * 1.02;
+    // 1. Base Sizes
+    const baseBodySize = tileSize * 1.02;
 
-    // Head: 1.4x makes it larger than the body
-    const headSize = tileSize * 1.4;
-
-    // Head Lift: Moves the head slightly upwards visually
-    const headUpOffset = tileSize * 0.15;
-
-    // 2. Draw BODY segments first (Tail to Neck)
+    // 2. Draw BODY segments (Tail to Neck)
     for (let i = snake.length - 1; i > 0; i--) {
       const seg = snake[i];
-
       let x = gridOffsetX + (seg.x * tileSize);
       let y = gridOffsetY + (seg.y * tileSize);
-
-      // Center position
       const cx = x + tileSize / 2;
       const cy = y + tileSize / 2;
 
-      ctx.drawImage(bodyImg, cx - bodySize / 2, cy - bodySize / 2, bodySize, bodySize);
+      /* ----------------------------------------------------
+         🌊 NEW: WAVE ANIMATION LOGIC
+      ----------------------------------------------------- */
+      let currentSegmentScale = 1;
+
+      if (waveAnimation) {
+        const now = performance.now();
+        const elapsed = now - waveStartTime;
+        const progress = elapsed / WAVE_DURATION; // 0.0 to 1.0
+
+        // Calculate "Travel Position" of the wave (Head -> Tail)
+        // We multiply by length + buffer so the wave exits the tail completely
+        const peakIndex = progress * (snake.length + 2);
+
+        // Distance of this segment from the wave peak
+        const dist = Math.abs(peakIndex - i);
+
+        // If segment is near the peak, scale it up (max 1.3x)
+        if (dist < 1.5) {
+          currentSegmentScale = 1 + 0.3 * Math.cos(dist * Math.PI / 3);
+        }
+      }
+
+      // Apply the scale
+      const drawnSize = baseBodySize * currentSegmentScale;
+
+      ctx.drawImage(bodyImg, cx - drawnSize / 2, cy - drawnSize / 2, drawnSize, drawnSize);
 
       if (numberSequence[i - 1] != null) {
+        // Optional: Scale text too
+        ctx.save();
+        if (currentSegmentScale > 1) {
+          ctx.font = `bold ${tileSize * 0.5 * currentSegmentScale}px Alphakind`;
+        }
         drawText(numberSequence[i - 1], cx, cy);
+        ctx.restore();
       }
     }
 
-    // 3. Draw HEAD
-    // Draw HEAD
+    // 3. Draw HEAD (Existing logic with idle pulse)
     if (snake.length > 0) {
       const seg = snake[0];
       let x = gridOffsetX + (seg.x * tileSize);
@@ -497,12 +606,17 @@ function initSnakeGame() {
       ctx.save();
       ctx.translate(cx, cy);
 
-      // Flip logic for Left direction
       if (snake.length > 1 && seg.x < snake[1].x) {
         ctx.scale(-1, 1);
       }
 
-      const scaledHeadSize = tileSize * 1.4 * headScale; // 👈 use headScale
+      // Combine Head Scale (Eating) + Idle Pulse
+      let currentScale = headScale;
+      if (isIdle && !eatingAnimation && !waveAnimation) {
+        currentScale = Math.sin(Date.now() / 300) * 0.1 + 1.1;
+      }
+
+      const scaledHeadSize = tileSize * 1.4 * currentScale;
 
       ctx.drawImage(
         headImg,
@@ -513,62 +627,193 @@ function initSnakeGame() {
       );
       ctx.restore();
     }
+  }
 
+  function triggerWave() {
+    if (waveAnimation) cancelAnimationFrame(waveAnimation);
+    waveStartTime = performance.now();
+
+    function loop() {
+      const elapsed = performance.now() - waveStartTime;
+
+      // Keep rendering while time is within duration
+      if (elapsed < WAVE_DURATION) {
+        render(); // This calls drawSnake(), which calculates the wave
+        waveAnimation = requestAnimationFrame(loop);
+      } else {
+        waveAnimation = null;
+        render(); // Final draw to snap back to normal
+      }
+    }
+
+    waveAnimation = requestAnimationFrame(loop);
   }
 
   let startTime = Date.now();
 
   function drawFood() {
-    const time = (Date.now() - startTime) / 600; // controls pulse speed
+    // ⚠️ Ensure you are using 'cachedPolygon' if you implemented the optimization, 
+    // otherwise keep using getPolygonPoints(canvas.width, canvas.height);
+    const polygon = getPolygonPoints(canvas.width, canvas.height);
+    const now = Date.now();
 
     foods.forEach(f => {
-      if (f.eaten) return; // Skip eaten food completely
+      if (f.eaten) return;
 
-      const cx = gridOffsetX + (f.x * tileSize) + (tileSize / 2);
-      const cy = gridOffsetY + (f.y * tileSize) + (tileSize / 2);
-      const baseRadius = tileSize * 0.35;
+      const cx = gridOffsetX + f.x * tileSize + tileSize / 2;
+      const cy = gridOffsetY + f.y * tileSize + tileSize / 2;
 
-      const time = (Date.now() - startTime) / 400;
-      const scale = 1 + 0.15 * Math.sin(time + f.x + f.y);
-      const radius = baseRadius * scale;
+      if (!isPointInPolygon(cx, cy, polygon)) return;
 
-      ctx.save();
-      ctx.translate(cx, cy);
+      /* -----------------------------------------------
+         ✨ NEW: POP-IN & FLOAT ANIMATION
+      ----------------------------------------------- */
+      // 1. Pop-In: Scale from 0 to 1 over 400ms (Elastic feel)
+      const age = now - f.spawnTime;
+      let scale = 1;
+      if (age < 400) {
+        // Elastic ease-out math
+        const t = age / 400;
+        scale = Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1 + 1; // Overshoot 1
+        if (scale > 1) scale = 1; // Clamp if math gets weird, or keep for bounce
+        if (age < 50) scale = 0; // seamless start
+      } else {
+        // 2. Float: Gentle bobbing up and down
+        scale = 1 + 0.05 * Math.sin(now / 300);
+      }
+
+      const radius = tileSize * 0.45 * scale; // Apply scale to radius
+
       ctx.beginPath();
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.arc(cx, cy, Math.max(0, radius), 0, Math.PI * 2);
       ctx.fillStyle = "#ffd17c";
       ctx.fill();
       ctx.lineWidth = 1;
       ctx.strokeStyle = "#c08737";
       ctx.stroke();
 
-      ctx.fillStyle = "#000";
-      ctx.font = `${tileSize * 0.4 * scale}px Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(f.value, 0, 0);
-      ctx.restore();
+      // Only draw text if bubble is big enough
+      if (scale > 0.5) {
+        ctx.fillStyle = "#000";
+        // Scale font too!
+        ctx.font = `${tileSize * 0.45 * scale}px Alphakind`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(f.value, cx, cy);
+      }
     });
-
-
-
-    requestAnimationFrame(drawFood); // keep animation running
   }
+
 
 
   function render() {
     clearCanvas();
+
+    ctx.save();
+    const polygon = getPolygonPoints(canvas.width, canvas.height);
+
+    ctx.beginPath();
+    ctx.moveTo(polygon[0][0], polygon[0][1]);
+    for (let i = 1; i < polygon.length; i++) ctx.lineTo(polygon[i][0], polygon[i][1]);
+    ctx.closePath();
+    ctx.clip();
+
     drawGrid();
-    drawSnake();
-    drawFood();
+    drawFood();        // Draw food (under particles)
+    drawParticles();   // 👈 Add this line here!
+    drawSnake();       // Draw snake (on top)
+
+    ctx.restore();
+  }
+
+  // Keep this global or inside initSnakeGame
+  const clipPolygon = [
+    [0, 15],
+    [0, 0],
+    [15, 0],
+    [85, 0],
+    [100, 0],
+    [100, 15],
+    [100, 65],
+    [82, 65],
+    [82, 100],
+    [15, 100],
+    [0, 100],
+    [0, 85]
+  ];
+
+
+  function getPolygonPoints(canvasWidth, canvasHeight) {
+    return clipPolygon.map(([px, py]) => [px / 100 * canvasWidth, py / 100 * canvasHeight]);
+  }
+
+
+  function isPointInPolygon(x, y, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i][0], yi = polygon[i][1];
+      const xj = polygon[j][0], yj = polygon[j][1];
+
+      const intersect = ((yi > y) !== (yj > y)) &&
+        (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 0.00001) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+
+  function canMoveToTile(tileX, tileY) {
+    const polygon = getPolygonPoints(canvas.width, canvas.height);
+
+    const corners = [
+      { cx: gridOffsetX + tileX * tileSize, cy: gridOffsetY + tileY * tileSize }, // top-left
+      { cx: gridOffsetX + (tileX + 1) * tileSize, cy: gridOffsetY + tileY * tileSize }, // top-right
+      { cx: gridOffsetX + tileX * tileSize, cy: gridOffsetY + (tileY + 1) * tileSize }, // bottom-left
+      { cx: gridOffsetX + (tileX + 1) * tileSize, cy: gridOffsetY + (tileY + 1) * tileSize } // bottom-right
+    ];
+
+    return corners.every(c => isPointInPolygon(c.cx, c.cy, polygon));
+  }
+
+
+
+  function playIdleAudio() {
+    // 1. If audio is already playing, stop it first to prevent overlapping
+    stopIdleAudio();
+
+    const audioPath = _pageData.sections[sectionCnt - 1].idleAudio;
+    console.log("🔊 Playing idle audio:", audioPath);
+
+    // 2. Play and store the reference
+    // NOTE: Your playBtnSounds function MUST return the audio object for this to work.
+    // e.g., return new Audio(src);
+    currentIdleAudio = playBtnSounds(audioPath);
+  }
+
+  function stopIdleAudio() {
+    // Stop the 10s interval
+    if (idleAudioInterval) {
+      clearInterval(idleAudioInterval);
+      idleAudioInterval = null;
+    }
+
+    // Stop the actual sound immediately
+    if (currentIdleAudio) {
+      // Check if the object has a pause method (HTML5 Audio)
+      if (typeof currentIdleAudio.pause === "function") {
+        currentIdleAudio.pause();
+        currentIdleAudio.currentTime = 0; // Reset to start
+      }
+      currentIdleAudio = null;
+    }
   }
 
   /* =========================
      GAME LOGIC
   ========================= */
   function randomEmptyCell() {
-    let pos;
-    let attempts = 0;
+    const polygon = getPolygonPoints(canvas.width, canvas.height);
+    let pos, attempts = 0;
     do {
       pos = {
         x: Math.floor(Math.random() * tileCountX),
@@ -577,11 +822,23 @@ function initSnakeGame() {
       attempts++;
     } while (
       attempts < 100 &&
-      (snake.some(s => s.x === pos.x && s.y === pos.y) ||
-        foods.some(f => f.x === pos.x && f.y === pos.y))
+      (!canMoveToTile(pos.x, pos.y) || snake.some(s => s.x === pos.x && s.y === pos.y) || foods.some(f => f.x === pos.x && f.y === pos.y))
     );
     return pos;
   }
+
+
+  function getPolygonBounds(polygon) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    polygon.forEach(([x, y]) => {
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
 
   function spawnFoods() {
     const correctPos = randomEmptyCell();
@@ -592,16 +849,27 @@ function initSnakeGame() {
       attempts++;
     } while (attempts < 100 && wrongPos.x === correctPos.x && wrongPos.y === correctPos.y);
 
+    // Logic to ensure we don't pick a number already on the snake
     let wrongValue;
-    do {
-      wrongValue =
-        currentPattern.start +
-        Math.floor(Math.random() * (currentPattern.end - currentPattern.start + 1));
-    } while (wrongValue === nextValue);
+    const possibleValues = [];
+    for (let i = currentPattern.start; i <= currentPattern.end; i++) {
+      possibleValues.push(i);
+    }
+    const validWrongOptions = possibleValues.filter(val =>
+      val !== nextValue && !numberSequence.includes(val)
+    );
+
+    if (validWrongOptions.length > 0) {
+      wrongValue = validWrongOptions[Math.floor(Math.random() * validWrongOptions.length)];
+    } else {
+      wrongValue = nextValue + 1 + Math.floor(Math.random() * 3);
+    }
+
+    const now = Date.now(); // 👈 Capture creation time
 
     foods = [
-      { ...correctPos, value: nextValue, correct: true },
-      { ...wrongPos, value: wrongValue, correct: false }
+      { ...correctPos, value: nextValue, correct: true, spawnTime: now }, // 👈 Add spawnTime
+      { ...wrongPos, value: wrongValue, correct: false, spawnTime: now }  // 👈 Add spawnTime
     ];
   }
 
@@ -610,60 +878,66 @@ function initSnakeGame() {
     const newX = head.x + dir.x;
     const newY = head.y + dir.y;
 
-    // Check Bounds
-    if (newX < 0 || newX >= tileCountX || newY < 0 || newY >= tileCountY) {
-      return;
-    }
+    if (!canMoveToTile(newX, newY)) return;
 
+    // Check Bounds & Self Collision
+    if (newX < 0 || newX >= tileCountX || newY < 0 || newY >= tileCountY) return;
     const newHead = { x: newX, y: newY };
-
-    // Check Self Collision
-    if (snake.some((s, index) => index !== 0 && s.x === newHead.x && s.y === newHead.y)) {
-      return;
-    }
+    if (snake.some((s, index) => index !== 0 && s.x === newHead.x && s.y === newHead.y)) return;
 
     const hitFood = foods.find(f => f.x === newHead.x && f.y === newHead.y);
 
     snake.unshift(newHead);
 
     if (hitFood && hitFood.correct) {
+      hitFood.eaten = true;
+      render(); // Hide food immediately
+
+      // ✨ Trigger Confetti at food position
+      const cx = gridOffsetX + hitFood.x * tileSize + tileSize / 2;
+      const cy = gridOffsetY + hitFood.y * tileSize + tileSize / 2;
+      createParticles(cx, cy, "#FFD700"); // Gold confetti
+
+      triggerWave();
+
       numberSequence.push(nextValue);
       nextValue++;
-
       isCorrect(hitFood);
       animateEating();
-
-      // Mark the eaten food to skip drawing
-      hitFood.eaten = true;
-
       animateFoodToHead(hitFood);
 
-      // Remove eaten food from array (optional but cleaner)
       foods = foods.filter(f => !f.eaten);
-
 
       if (nextValue > currentPattern.end) {
         render();
-        popup.classList.remove("hidden");
         isGameActive = false;
+        playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
+        showEndAnimations();
         return;
       }
 
-      spawnFoods();
+      /* -----------------------------------------------
+         🛠 BUG FIX: DELAYED SPAWN
+         We wait 300ms before spawning new food.
+         This prevents the "Double Draw" glitch and
+         lets the user enjoy the "Pop-in" animation.
+      ----------------------------------------------- */
+      setTimeout(() => {
+        spawnFoods();
+        // Force a render so the animation loop (if idle) picks up the new food
+        if (!eatingAnimation && !waveAnimation) render();
+      }, 300);
+
     } else if (hitFood && !hitFood.correct) {
-      // ❌ Wrong food
-      snake.shift(); // Undo move
+      // Wrong food logic...
+      snake.shift();
       playBtnSounds(_pageData.sections[sectionCnt - 1].wrongAudio);
-      audioEnd(function () {
-        inCorrectFood();
-      })    // shuffle foods
-      isProcessingMove = false; // allow next move immediately
+      audioEnd(function () { inCorrectFood(); });
+      isProcessingMove = false;
       return;
     } else {
-      // Normal move
-      snake.pop();
+      snake.pop(); // Normal move
     }
-
     render();
   }
 
@@ -674,6 +948,8 @@ function initSnakeGame() {
   window.enableCaterpillarMovement = function () {
     console.log("Caterpillar inputs unlocked");
     isGameActive = true;
+    resetIdleTimer();
+    // resetIdleTimer(); // Ensure timer starts when game is enabled
   };
 
   function animateEating() {
@@ -691,6 +967,7 @@ function initSnakeGame() {
         eatingAnimation = requestAnimationFrame(step);
       } else {
         headScale = 1;
+        eatingAnimation = null;
         render();
       }
     }
@@ -737,7 +1014,7 @@ function initSnakeGame() {
   }
 
 
-  replayBtn.onclick = startGame;
+  // replayBtn.onclick = startGame;
 
   function resetSnakeSamePattern() {
     numberSequence = [];
@@ -764,6 +1041,7 @@ function initSnakeGame() {
   }
 
   function isCorrect(food) {
+    playBtnSounds(_pageData.sections[sectionCnt - 1].correctAudio)
     console.log("✅ Correct food eaten:", food.value);
   }
 
@@ -791,34 +1069,57 @@ function initSnakeGame() {
     }
   };
 
+
   function startGame() {
-
-
-    popup.classList.add("hidden");
-    wrongPopup.classList.add("hidden");
+    // 1. Reset Game State
+    // popup.classList.add("hidden");
+    // wrongPopup.classList.add("hidden");
 
     currentPattern = getNextPattern();
     snake = initSnake(currentPattern);
     nextValue = currentPattern.start + snake.length - 1;
-    foods = [];
+    foods = []; // Reset foods
 
     isGameActive = false;
     isProcessingMove = false;
 
+    // 2. Start Idle Timer
+    // resetIdleTimer();
+
     resizeCanvas();
     spawnFoods();
-    render();
+
+    /* -----------------------------------------------------------
+       🛠 FIX: Force Animation Loop on Start
+       We loop 'render' for 600ms so the food "Pop-in" animation 
+       plays out immediately. Otherwise, it stays at scale 0 (invisible).
+    ----------------------------------------------------------- */
+    let start = performance.now();
+    function introLoop() {
+      // Keep rendering for 600ms (enough for the 400ms pop-in)
+      if (performance.now() - start < 600) {
+        render();
+        requestAnimationFrame(introLoop);
+      } else {
+        render(); // Final draw to ensure it's crisp
+      }
+    }
+    introLoop();
   }
+
 
   /* =========================
      INPUT HANDLERS
   ========================= */
 
   function setDirection(dirKey) {
+    /* -----------------------------------------------
+       UPDATED LOGIC: Reset Idle Timer on Input
+    ----------------------------------------------- */
+    resetIdleTimer();
+
     if (!isGameActive) return;
     if (isProcessingMove) return;
-    if (!wrongPopup.classList.contains("hidden")) return;
-    if (!popup.classList.contains("hidden")) return;
 
     let dirVec = { x: 0, y: 0 };
     if (dirKey === "up") dirVec = { x: 0, y: -1 };
@@ -869,37 +1170,43 @@ function initSnakeGame() {
      IDLE SYSTEM HELPERS
   ========================= */
 
+
   function resetIdleTimer() {
-    // 1. Clear existing timer and state
     clearTimeout(idleTimer);
+    idleTimer = null; // 👈 ADD THIS
+
+    stopIdleSoundNow();
+
     if (isIdle) {
       isIdle = false;
-      cancelAnimationFrame(animationFrameId); // Stop the wiggle loop
-      render(); // Snap back to static position immediately
+      cancelAnimationFrame(animationFrameId);
+      render();
     }
 
-    // 2. Only start timer if game is active
     if (isGameActive) {
       idleTimer = setTimeout(triggerIdleState, IDLE_DURATION);
     }
   }
 
+
   function triggerIdleState() {
     if (!isGameActive) return;
 
     isIdle = true;
+    console.log("👋 It's your turn!");
 
-    // "Gentle reminder only once"
-    console.log("👋 It's your turn! Find the next number.");
-    // (Optional: You could show a DOM tooltip here if you wanted)
+    // 🔒 Stop idleTimer while audio is playing
+    clearTimeout(idleTimer);
+    idleTimer = null;
 
-    // Start the animation loop for the wiggle/highlight
+    playIdleSoundNow();
     animateIdleLoop();
   }
 
+
   function animateIdleLoop() {
     if (!isIdle) return;
-    render(); // Redraws canvas with wiggle math
+    render(); // Redraws canvas with wiggle math via drawSnake
     animationFrameId = requestAnimationFrame(animateIdleLoop);
   }
 
@@ -928,8 +1235,6 @@ function initSnakeGame() {
     render(); // redraw immediately
   }
 
-
-
 }
 
 function playFeedbackAudio(_audio) {
@@ -938,9 +1243,6 @@ function playFeedbackAudio(_audio) {
   audioEnd(function () {
     $(".dummy-patch").hide();
   })
-
-
-
 }
 
 
@@ -967,6 +1269,7 @@ function jumtoPage(pageNo) {
   playClickThen();
 
   _controller.pageCnt = pageNo;
+  console.log(pageNo, "pageNumber");
 
   _controller.updateViewNow();
 }
@@ -1096,7 +1399,7 @@ function showEndAnimations() {
     $(".greetingsPop").css("visibility", "visible");
     $(".greetingsPop").css("opacity", "1");
 
-    if (currentTime >= 1) {
+    if (currentTime >= 5) {
       $(".confetti").addClass("show");
       // $(".confetti").show();
       setTimeout(function () {

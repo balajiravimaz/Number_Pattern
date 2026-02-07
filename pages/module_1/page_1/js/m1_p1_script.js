@@ -54,6 +54,8 @@ function _pageLoaded() {
 
     }
     appState.pageCount = _controller.pageCnt - 1;
+    
+    $('.introInfo').attr('data-popup', 'introPopup-2');
     addSectionData();
     //assignAudio(_audioId, _audioIndex, _pageAudioSync, _forceNavigation, _videoId, _popupAudio, _reloadRequired);
     pagePreLoad();
@@ -113,7 +115,7 @@ function addSectionData() {
                     imgObj += '</button><div class="btn_info i-txt-toolTip" id="info-' + (i + 1) + '" data-tooltip="Information"></div></div>'
 
                     $('#section-' + sectionCnt).find('.content-holder').append(
-                        '<div class="infobtnPopup" id="infobtnPopup-'+(i+1)+'"><div class="popup-content">' +
+                        '<div class="infobtnPopup" id="infobtnPopup-' + (i + 1) + '"><div class="popup-content">' +
                         '<button class="infoPopAudio mute" onclick="togglePopAudio(this, \'' + _pageData.sections[sectionCnt - 1].content.sectionArray[i].infoAudio + '\')"></button>' +
                         '<button class="introPopclose" data-tooltip="Close" onClick="closeIntroPop(\'.infobtnPopup\')"></button>' +
                         '<img src="' + _pageData.sections[sectionCnt - 1].content.sectionArray[i].infoImg + '" alt="">' +
@@ -121,6 +123,18 @@ function addSectionData() {
                     );
                 }
             }
+
+            let infoPop = `
+<div id="introPopup-2" class="introPopup">                
+    <div class="popup-content">
+        <button class="introPopAudio mute" onclick="togglePopAudio(this, '${_pageData.sections[sectionCnt - 1].infoPopAudio}')"></button>
+        <button class="introPopclose" data-tooltip="Close" onclick="closePopup('introPopup-2')"></button>
+        <img src="assets/images/home_info.png" alt="">
+    </div>
+</div>
+`;
+
+            $('#section-' + sectionCnt).find('.content-holder').append(infoPop);
 
             $('#section-' + sectionCnt).find('.content-holder').find('.col-left').find('.content').find('.content-bg').append('<button class="goback-btn"></button><div class="body"><div class="dummypatch"></div><div class="image-container">' + imgObj + '</div></div>');
 
@@ -326,7 +340,7 @@ function onClickHandler(evt) {
     var id = $(this).attr('id');
     var arr = id.split('-')
     var num = Number(arr[arr.length - 1]) - 1;
-    console.log("its clicked", _controller.pageCnt,num)
+    console.log("its clicked", _controller.pageCnt, num)
     // exit();
 
     var body = $('#section-' + sectionCnt).find('.content-holder').find('.col-mid').find('.content').find('.content-bg').find('.body')

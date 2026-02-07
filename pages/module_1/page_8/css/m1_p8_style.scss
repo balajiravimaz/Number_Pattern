@@ -470,6 +470,7 @@
 											width: 160px;
 											position: relative;
 											height: auto;
+											opacity: 0;
 
 											&:nth-child(2) {
 												bottom: 30px;
@@ -488,7 +489,7 @@
 												align-items: center;
 												position: relative;
 												touch-action: none;
-												user-select: none;
+												user-select: none;												
 
 												&.locked {
 													cursor: default;

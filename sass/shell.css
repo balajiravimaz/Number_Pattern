@@ -1744,7 +1744,7 @@ footer p {
   cursor: pointer;
 }
 
-#introPopup {
+#introPopup-1 {
   display: none;
   opacity: 0;
   position: fixed;
@@ -1757,7 +1757,7 @@ footer p {
   transition: opacity 0.3s ease;
   z-index: 99999;
 }
-#introPopup .popup-content {
+#introPopup-1 .popup-content {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -1774,7 +1774,7 @@ footer p {
   padding: 1%;
   background: transparent;
 }
-#introPopup .popup-content .introPopclose {
+#introPopup-1 .popup-content .introPopclose {
   position: absolute;
   top: 30px;
   right: 125px;
@@ -1787,17 +1787,17 @@ footer p {
   /* Show tooltip on hover */
 }
 @media (min-width: 320px) and (max-width: 950px) and (orientation: landscape) {
-  #introPopup .popup-content .introPopclose {
+  #introPopup-1 .popup-content .introPopclose {
     top: 15px;
     right: 60px;
     width: 15px;
     height: 15px;
   }
 }
-#introPopup .popup-content .introPopclose:hover {
+#introPopup-1 .popup-content .introPopclose:hover {
   transform: scale(1.125);
 }
-#introPopup .popup-content .introPopclose::after {
+#introPopup-1 .popup-content .introPopclose::after {
   content: attr(data-tooltip);
   /* tooltip text from attribute */
   position: absolute;
@@ -1822,10 +1822,10 @@ footer p {
   margin-top: 4px;
   z-index: 10;
 }
-#introPopup .popup-content .introPopclose:hover::after {
+#introPopup-1 .popup-content .introPopclose:hover::after {
   opacity: 1;
 }
-#introPopup .popup-content .introPopAudio {
+#introPopup-1 .popup-content .introPopAudio {
   position: absolute;
   width: 40px;
   height: 40px;
@@ -1835,25 +1835,25 @@ footer p {
   transition: transform 0.5s ease-in-out;
 }
 @media (min-width: 320px) and (max-width: 950px) and (orientation: landscape) {
-  #introPopup .popup-content .introPopAudio {
+  #introPopup-1 .popup-content .introPopAudio {
     width: 20px;
     height: 20px;
     top: 20px;
     left: 45px;
   }
 }
-#introPopup .popup-content .introPopAudio:hover {
+#introPopup-1 .popup-content .introPopAudio:hover {
   transform: scale(1.125);
 }
-#introPopup .popup-content .introPopAudio.playing {
+#introPopup-1 .popup-content .introPopAudio.playing {
   background: url(../assets/images/sound.png) no-repeat;
   background-size: contain;
 }
-#introPopup .popup-content .introPopAudio.mute {
+#introPopup-1 .popup-content .introPopAudio.mute {
   background: url(../assets/images/sound_pause.png) no-repeat;
   background-size: contain;
 }
-#introPopup .popup-content img {
+#introPopup-1 .popup-content img {
   width: 100%;
   height: auto;
 }
