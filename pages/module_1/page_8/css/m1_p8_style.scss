@@ -472,6 +472,10 @@
 											height: auto;
 											opacity: 0;
 
+											img{
+												transition: none !important;
+											}
+
 											&:nth-child(2) {
 												bottom: 30px;
 											}

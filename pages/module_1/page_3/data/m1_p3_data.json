@@ -40,10 +40,10 @@
 					{
 						"sectionID": 1,
 						"sectionIndx": 1,
-						"infoAudio": "pages/module_1/page_3/audios/audio1.mp3",
+						"infoAudio": "pages/module_1/page_3/audios/info_audio.mp3",
 						"isEmptyAudio": false,
 						"audioIndex": 0,
-						"infoImg": "pages/module_1/page_3/images/Story_Time_Info.png"
+						"infoImg": "pages/module_1/page_3/images/info_1.png"
 					}
 				]
 			}

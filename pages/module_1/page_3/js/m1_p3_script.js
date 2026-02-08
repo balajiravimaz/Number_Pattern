@@ -131,7 +131,7 @@ function addSectionData() {
     <div class="popup-content">
         <button class="introPopAudio mute" onclick="togglePopAudio(this, '${_pageData.sections[sectionCnt - 1].infoPopAudio}')"></button>
         <button class="introPopclose" data-tooltip="Close" onclick="closePopup('introPopup-3')"></button>
-        <img src="assets/images/home_info.png" alt="">
+        <img src="${_pageData.sections[sectionCnt - 1].infoPopImage}" alt="">
     </div>
 </div>
 `;

@@ -348,7 +348,7 @@ function loadPattern(index) {
 
 function handlePatternCompleted() {
   const gameArea = document.querySelector(".game-area");
-    console.log("Pattern completed! Loading next pattern...");
+  console.log("Pattern completed! Loading next pattern...");
 
   gameArea.classList.add("is-fading");
   setTimeout(() => {
@@ -394,7 +394,7 @@ function getCupHTML(pattern) {
 
     html += `
     <div class="cupContain" id="cupContain-${i + 1}">
-      <div class="cup" draggable="true" data-value="${item.value}">
+      <div class="cup" data-value="${item.value}">
         <img src="${item.img}" />
       </div>
       </div>
@@ -457,132 +457,11 @@ function resetCupPosition(cup) {
   cup.style.top = `${cup.dataset.startY}px`;
 }
 
-// function enableDragAndDrop({
-//   cupsSelector,
-//   slotsSelector,
-//   onCorrectDrop,
-//   onWrongDrop,
-//   onGameCompleted
-// }) {
-//   const cups = document.querySelectorAll(cupsSelector);
-//   const slots = document.querySelectorAll(slotsSelector);
-
-//   let activeCup = null;
-//   let dragImg = null;
-//   let offsetX = 0;
-//   let offsetY = 0;
-
-//   cups.forEach(cup => {
-//     cup.addEventListener("pointerdown", startDrag);
-//   });
-
-//   function startDrag(e) {
-//     if (activeCup) return;
-//     e.preventDefault();
-//     playClickThen();
-
-//     activeCup = e.currentTarget;
-//     const img = activeCup.querySelector("img");
-
-//     // clone image
-//     dragImg = img.cloneNode(true);
-//     dragImg.style.position = "fixed";
-//     dragImg.style.width = img.offsetWidth + "px";
-//     dragImg.style.height = img.offsetHeight + "px";
-//     dragImg.style.pointerEvents = "none";
-//     dragImg.style.zIndex = "9999";
-
-//     document.body.appendChild(dragImg);
-
-//     const rect = img.getBoundingClientRect();
-//     offsetX = e.clientX - rect.left;
-//     offsetY = e.clientY - rect.top;
-
-//     moveAt(e.clientX, e.clientY);
-
-//     document.addEventListener("pointermove", onMove);
-//     document.addEventListener("pointerup", endDrag);
-//   }
-
-//   function moveAt(x, y) {
-//     dragImg.style.left = x - offsetX + "px";
-//     dragImg.style.top = y - offsetY + "px";
-//   }
-
-//   function onMove(e) {
-//     moveAt(e.clientX, e.clientY);
-//   }
-
-//   function endDrag(e) {
-//     document.removeEventListener("pointermove", onMove);
-//     document.removeEventListener("pointerup", endDrag);
-
-//     let dropped = false;
-
-//     slots.forEach(slot => {
-//       const rect = slot.getBoundingClientRect();
-
-//       if (
-//         e.clientX > rect.left &&
-//         e.clientX < rect.right &&
-//         e.clientY > rect.top &&
-//         e.clientY < rect.bottom
-//       ) {
-//         dropped = true;
-//         handleDrop(slot);
-//       }
-//     });
-
-//     const cupRef = activeCup;
-
-//     dragImg.remove();
-//     dragImg = null;
-//     activeCup = null;
-
-//     // if (!dropped && cupRef) {
-//     //   onWrongDrop?.(cupRef);
-//     // }
-//   }
-
-//   function handleDrop(slot) {
-//     if (!activeCup || slot.children.length > 0) {
-//       onWrongDrop?.(activeCup);
-//       return;
-//     }
-
-//     const cupValue = activeCup.dataset.value;
-//     const slotValue = slot.dataset.value;
-
-//     if (cupValue === slotValue) {
-//       slot.appendChild(activeCup);
-
-//       // 🔒 FULLY DISABLE FUTURE DRAG
-//       activeCup.style.pointerEvents = "none";
-//       activeCup.style.touchAction = "none";
-//       activeCup.removeEventListener("pointerdown", startDrag);
-
-//       onCorrectDrop?.(activeCup, slot);
-
-//       if (isGameCompleted(slots)) {
-//         onGameCompleted?.();
-//       }
-//     }
-
-//     else {
-//       onWrongDrop?.(activeCup);
-//     }
-//   }
-// }
 
 
-// function isGameCompleted(slots) {
-//   return [...slots].every(slot =>
-//     slot.children.length === 1 &&
-//     slot.children[0].dataset.value === slot.dataset.value
-//   );
-// }
-
-
+function isDesktopDevice() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
 function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrongDrop, onGameCompleted }) {
   const cups = document.querySelectorAll(cupsSelector);
   const slots = document.querySelectorAll(slotsSelector);
@@ -592,184 +471,148 @@ function enableDragAndDrop({ cupsSelector, slotsSelector, onCorrectDrop, onWrong
   let offsetX = 0;
   let offsetY = 0;
 
-  // Store original positions for all cups
+  // Desktop: setup drop targets
+  if (isDesktopDevice()) {
+    slots.forEach(slot => {
+      slot.addEventListener("dragover", e => e.preventDefault());
+      slot.addEventListener("drop", e => {
+        e.preventDefault();
+        if (!activeCup) return;
+        handleDrop(slot);
+      });
+    });
+  }
+
   cups.forEach(cup => {
     cup._originalParent = cup.parentElement;
-    // We don't strictly need data-startX/Y for the drag logic here 
-    // because we calculate offset dynamically on click, but keeping it as per your code.
+
+    // store initial position
     const rect = cup.getBoundingClientRect();
     cup.dataset.startX = rect.left + window.scrollX;
     cup.dataset.startY = rect.top + window.scrollY;
 
-    cup.addEventListener("pointerdown", startDrag);
+    if (isDesktopDevice()) {
+      enableDesktopDrag(cup);
+    } else {
+      cup.addEventListener("pointerdown", startDrag);
+    }
   });
 
-// Global variable to store the scale
-let currentScale = 1;
-
-function startDrag(e) {
+  function startDrag(e) {
     if (activeCup) return;
     e.preventDefault();
 
     activeCup = e.currentTarget;
     const img = activeCup.querySelector("img");
-    const rect = img.getBoundingClientRect();
 
-    // 1. Detect the scale of the game automatically
-    // We check the width of the wrapper vs its actual rendered width
-    const wrapper = document.getElementById('f_wrapper') || document.body;
-    currentScale = wrapper.getBoundingClientRect().width / wrapper.offsetWidth;
+    // Wait a tick to ensure image has rendered
+    requestAnimationFrame(() => {
+      const rect = img.getBoundingClientRect();
 
-    // 2. Calculate the offset
-    // We must account for the scale here
-    offsetX = (e.clientX - rect.left) / currentScale;
-    offsetY = (e.clientY - rect.top) / currentScale;
+      // Clone the image
+      dragImg = img.cloneNode(true);
+      dragImg.style.position = "fixed";
+      dragImg.style.width = rect.width + "px";  // exact size
+      dragImg.style.height = rect.height + "px";
+      dragImg.style.pointerEvents = "none";
+      dragImg.style.zIndex = 9999;
+      dragImg.style.margin = "0";
+      dragImg.style.padding = "0";
+      dragImg.style.transform = "none";
+      dragImg.style.display = "block";
 
-    // 3. Create the ghost
-    dragImg = img.cloneNode(true);
-    
-    // 4. Force Reset styles
-    Object.assign(dragImg.style, {
-        position: "absolute", // Use absolute, not fixed, to stay inside the scaled coordinate system
-        width: img.offsetWidth + "px",
-        height: img.offsetHeight + "px",
-        margin: "0",
-        transform: "none",
-        bottom: "auto",
-        right: "auto",
-        pointerEvents: "none",
-        zIndex: "99999"
+      document.body.appendChild(dragImg);
+
+      // Hide the original cup after clone is ready
+      activeCup.style.opacity = "0";
+
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      moveAt(e.clientX, e.clientY);
+
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", endDrag);
     });
+  }
 
-    // 5. Append to the SAME container as the cup, not the body
-    // This ensures the ghost is subject to the same scaling as the cup
-    activeCup.parentElement.appendChild(dragImg);
-    activeCup.style.opacity = "0";
-
-    // Initial position
-    moveAt(e.clientX, e.clientY);
-
-    document.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerup", endDrag);
-}
-
-function moveAt(x, y) {
-    if (!dragImg || !activeCup) return;
-
-    // Get the container's position to calculate relative movement
-    const parentRect = activeCup.parentElement.getBoundingClientRect();
-
-    // Math: (Mouse Pos - Container Pos) / Scale - Initial Offset
-    const posX = (x - parentRect.left) / currentScale - offsetX;
-    const posY = (y - parentRect.top) / currentScale - offsetY;
-
-    dragImg.style.left = posX + "px";
-    dragImg.style.top = posY + "px";
-}
+  function moveAt(x, y) {
+    if (!dragImg) return;
+    dragImg.style.left = x - offsetX + "px";
+    dragImg.style.top = y - offsetY + "px";
+  }
 
   function onMove(e) {
     moveAt(e.clientX, e.clientY);
   }
 
   function endDrag(e) {
-    document.body.classList.remove("dragging-active");
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", endDrag);
 
-    // Remove drag image visually
     if (dragImg) {
       dragImg.remove();
       dragImg = null;
     }
 
-    // Make the original visible again immediately.
-    // If we drop successfully, it moves. If we fail, it stays/animates.
-    if (activeCup) {
-      activeCup.style.opacity = "1";
-    }
+    if (activeCup) activeCup.style.opacity = "1";
 
     let droppedOnSlot = false;
-
     slots.forEach(slot => {
       const rect = slot.getBoundingClientRect();
-      if (e.clientX > rect.left && e.clientX < rect.right && e.clientY > rect.top && e.clientY < rect.bottom) {
+      if (e.clientX > rect.left && e.clientX < rect.right &&
+        e.clientY > rect.top && e.clientY < rect.bottom) {
         droppedOnSlot = true;
         handleDrop(slot);
       }
     });
 
-    // Note: If droppedOnSlot is false, the activeCup (which is now opacity: 1)
-    // simply appears back at its original position because we never moved it in the DOM.
-    // This satisfies "otherwise it should go back original position".
-
-    if (!droppedOnSlot) {
-      activeCup = null;
-    }
+    if (!droppedOnSlot) activeCup = null;
   }
 
   function handleDrop(slot) {
     if (!activeCup) return;
-
-    // STOP if slot already has a cup
     if (slot.children.length > 0) {
-      activeCup = null; // Reset if slot is full
+      activeCup = null;
       return;
     }
 
     const cupValue = activeCup.dataset.value;
     const slotValue = slot.dataset.value;
 
-    // Append cup to slot visually first
     slot.appendChild(activeCup);
-
-    // Disable dragging while cup is in slot (temporarily)
     activeCup.style.pointerEvents = "none";
     activeCup.style.touchAction = "none";
     activeCup.removeEventListener("pointerdown", startDrag);
 
     if (cupValue === slotValue) {
-      onCorrectDrop?.(activeCup, slot); // <- call first
-      activeCup = null; // <- then null
-      if (isGameCompleted(slots)) {
-        onGameCompleted?.();
-      }
+      onCorrectDrop?.(activeCup, slot);
+      activeCup = null;
+      if (isGameCompleted(slots)) onGameCompleted?.();
     } else {
-      // Logic for Wrong Drop
       onWrongDrop?.(activeCup);
-
       const cupRef = activeCup;
-      activeCup = null; // Release reference so new drags can start if needed
-
-      shakeCup(cupRef, () => {
-        setTimeout(() => {
-          animateBack(cupRef);
-        }, 500);
-      });
+      activeCup = null;
+      shakeCup(cupRef, () => setTimeout(() => animateBack(cupRef), 500));
     }
   }
 
   function shakeCup(cup, onComplete) {
     if (!cup) return;
-
     cup.style.transition = "transform 0.08s ease";
     cup.style.transform = "translateX(-5px)";
-
     setTimeout(() => { cup.style.transform = "translateX(5px)"; }, 80);
     setTimeout(() => { cup.style.transform = "translateX(0)"; }, 160);
-    setTimeout(() => {
-      cup.style.transition = "";
-      onComplete && onComplete();
-    }, 200);
+    setTimeout(() => { cup.style.transition = ""; onComplete?.(); }, 200);
   }
 
   function animateBack(cup) {
     if (!cup || !cup._originalParent) return;
-
     const originalParent = cup._originalParent;
-    const DURATION = 800; // Reduced duration slightly for snappier feel
+    const DURATION = 800;
 
     const firstRect = cup.getBoundingClientRect();
-    originalParent.appendChild(cup); // Move back in DOM
+    originalParent.appendChild(cup);
     const lastRect = cup.getBoundingClientRect();
 
     const deltaX = firstRect.left - lastRect.left;
@@ -778,30 +621,62 @@ function moveAt(x, y) {
     cup.style.pointerEvents = "none";
     cup.style.transition = "none";
     cup.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-
-    // Force reflow
     cup.getBoundingClientRect();
 
     requestAnimationFrame(() => {
-      cup.style.transition = `transform ${DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-      cup.style.transform = "translate(0, 0)";
+      cup.style.transition = `transform ${DURATION}ms cubic-bezier(0.22,1,0.36,1)`;
+      cup.style.transform = "translate(0,0)";
     });
 
     setTimeout(() => {
       cup.style.transition = "";
       cup.style.transform = "";
       cup.style.pointerEvents = "";
-      cup.addEventListener("pointerdown", startDrag);
+      if (isDesktopDevice()) enableDesktopDrag(cup);
+      else cup.addEventListener("pointerdown", startDrag);
     }, DURATION);
   }
+
+  function enableDesktopDrag(cup) {
+    cup.setAttribute("draggable", "true");
+
+    cup.addEventListener("dragstart", e => {
+      activeCup = cup;
+      const img = cup.querySelector("img");
+
+      const rect = img.getBoundingClientRect();
+      cup.style.opacity = "0";
+
+      const dragPreview = img.cloneNode(true);
+      dragPreview.style.width = rect.width + "px";
+      dragPreview.style.height = rect.height + "px";
+      dragPreview.style.position = "absolute";
+      dragPreview.style.top = "-9999px";
+      dragPreview.style.left = "-9999px";
+      dragPreview.style.pointerEvents = "none";
+
+      document.body.appendChild(dragPreview);
+      e.dataTransfer.setDragImage(dragPreview, rect.width / 2, rect.height / 2);
+      e.dataTransfer.setData("text/plain", "");
+      setTimeout(() => dragPreview.remove(), 0);
+    });
+
+    cup.addEventListener("dragend", () => {
+      cup.style.opacity = "1";
+      activeCup = null;
+    });
+  }
+
   function isGameCompleted(slots) {
     return [...slots].every(slot => {
       const cup = slot.querySelector(".cup");
       return cup && cup.dataset.value === slot.dataset.value;
     });
   }
-
 }
+
+
+
 
 
 

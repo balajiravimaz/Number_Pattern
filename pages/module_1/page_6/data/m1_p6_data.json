@@ -28,7 +28,7 @@
 			"slideTitle": "overview",
 			"headerTitle": "Explore & Learn: <span>Area and Perimeter</span>",
 			"infoPopAudio":"pages/module_1/page_6/audios/info_audio.mp3",
-			"infoPopImage":"pages/module_1/page_6/images/Game_Info.png",
+			"infoPopImage":"pages/module_1/page_6/images/game_info.png",
 			"ost": "",
 			"backBtnSrc":"assets/images/back.png",
 			"insText": "​",
@@ -43,7 +43,7 @@
 						"infoAudio": "pages/module_1/page_6/audios/audio1.mp3",
 						"isEmptyAudio": false,
 						"audioIndex": 0,
-						"infoImg": "pages/module_1/page_6/images/Story_Time_Info.png"
+						"infoImg": "pages/module_1/page_6/images/fun_info.png"
 					},
 					{
 						"sectionID": 2,
@@ -51,7 +51,7 @@
 						"infoAudio": "pages/module_1/page_6/audios/audio2.mp3",
 						"isEmptyAudio": false,
 						"audioIndex": 1,
-						"infoImg": "pages/module_1/page_6/images/Simulation_info.png"
+						"infoImg": "pages/module_1/page_6/images/pattern_info.png"
 					}					
 				]
 			}

@@ -442,6 +442,9 @@ $bg-position: -120px -120px, 0 0, 20px 50px, 25px 55px, 50px 125px;*/
   height: auto;
   opacity: 0;
 }
+#section-1 .content-holder .col-left .content .content-bg .content-style > .body .animat-container .game-area .cups .cupContain img {
+  transition: none !important;
+}
 #section-1 .content-holder .col-left .content .content-bg .content-style > .body .animat-container .game-area .cups .cupContain:nth-child(2) {
   bottom: 30px;
 }
