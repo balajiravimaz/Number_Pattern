@@ -334,6 +334,7 @@ function getShelfHTML(pattern) {
 }
 
 /* ---------------- Cups ---------------- */
+/* ---------------- Cups ---------------- */
 function getCupHTML(pattern) {
   if (!pattern) return "";
 
@@ -341,15 +342,17 @@ function getCupHTML(pattern) {
     i => i.value === pattern.correctNextValue
   );
 
-  // Pick an incorrect item that is NOT the correct one
   const incorrectItem = pattern.items.find(
     i => i.value !== pattern.correctNextValue
   );
 
   if (!correctItem || !incorrectItem) return "";
 
-  // Always show correct first, incorrect second (no shuffle)
-  const options = [correctItem, incorrectItem];
+  // RANDOMIZE position: sometimes correct left, sometimes right
+  const options =
+    Math.random() < 0.5
+      ? [correctItem, incorrectItem]
+      : [incorrectItem, correctItem];
 
   return options.map(item => `
     <div class="cupContain">
@@ -361,6 +364,7 @@ function getCupHTML(pattern) {
     </div>
   `).join("");
 }
+
 
 /* ---------------- Interaction ---------------- */
 $(document).on("pointerdown", ".cup", function (e) {
@@ -405,9 +409,11 @@ function fillNextSlot(value) {
   currentIndex++;
 
   if (currentIndex === 3) {
-    setTimeout(loadNewPattern, 800);
+    //setTimeout(loadNewPattern, 800);
     playBtnSounds(_pageData.sections[sectionCnt - 1].finalAudio);
     showEndAnimations();
+    // Optionally disable further interaction
+    $(".cup").css("pointer-events", "none");
   } else {
     renderCups();
   }
@@ -467,7 +473,7 @@ function renderCups() {
 
 
 //----------------------------------------------------------
-function isSameOrder(items, sequence) {
+/* function isSameOrder(items, sequence) {
   if (items.length !== sequence.length) return false;
 
   for (let i = 0; i < items.length; i++) {
@@ -488,7 +494,7 @@ function shuffleItemsAvoidCorrect(items, sequence) {
   } while (isSameOrder(shuffled, sequence) && attempts < 10);
 
   return shuffled;
-}
+} */
 
 
 
